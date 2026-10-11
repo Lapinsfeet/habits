@@ -167,6 +167,130 @@
   .pop-btns button.on[data-s="done"] { background: var(--c); color: var(--on, #fff); border-color: transparent; }
   .pop-btns button.on[data-s="skip"] { background: var(--skip); color: var(--bg); border-color: transparent; }
 
+  /* Streak banner */
+  .streak {
+    display: flex; align-items: center; gap: 14px 20px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .streak-main { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 210px; }
+  .streak-flame {
+    width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; font-size: 26px; flex-shrink: 0;
+    background: color-mix(in srgb, #f97316 18%, transparent);
+  }
+  .streak-flame.cold { filter: grayscale(1); opacity: .55; }
+  .streak-num { font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+  .streak-sub { font-size: 13px; color: var(--muted); }
+  .streak-week { display: flex; gap: 6px; }
+  .streak-week > div { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--muted); font-weight: 600; }
+  .streak-week i { width: 24px; height: 24px; border-radius: 7px; background: var(--cell-off); display: grid; place-items: center; color: #fff; }
+  .streak-week i svg { width: 13px; height: 13px; }
+  .streak-week i.ok { background: #f97316; }
+  .streak-week i.miss { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
+  .streak-week i.pending { background: var(--cell); }
+  .streak-week i.today { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--text); }
+
+  /* Clickable habit header (opens details) */
+  .card .emoji, .card .titles { cursor: pointer; }
+  .titles h2 { display: flex; align-items: center; gap: 2px; }
+  .titles h2 span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .titles h2 svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+  .titles:focus-visible, .card .emoji:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+
+  /* Detail view */
+  dialog.wide { width: min(560px, calc(100vw - 24px)); }
+  .det-top {
+    position: sticky; top: 0; z-index: 3; background: var(--surface);
+    padding: 18px 18px 12px; display: flex; flex-direction: column; gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .det-head { display: flex; gap: 12px; align-items: center; }
+  .det-head .grow { flex: 1; min-width: 0; }
+  .det-head h3 { margin: 0; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .det-desc { color: var(--muted); font-size: 13px; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 3px; }
+  .tabs button {
+    border: 0; background: none; border-radius: 9px; padding: 8px 4px; font-weight: 600; font-size: 14px;
+    color: var(--muted); display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .tabs button svg { width: 16px; height: 16px; }
+  .tabs button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .det-pane { padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .det-pane.edit { padding: 0; }
+  .det-pane.edit .dlg-head { display: none; }
+
+  .badge {
+    width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0;
+    background: color-mix(in srgb, var(--c) 20%, transparent); color: color-mix(in srgb, var(--c) 80%, var(--text));
+  }
+  .badge svg { width: 19px; height: 19px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat {
+    position: relative; background: var(--surface-2); border: 1px solid var(--border); border-radius: 18px;
+    padding: 14px 16px 16px; min-height: 124px; display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .stat .badge { position: absolute; top: 12px; right: 12px; }
+  .stat b { font-size: 38px; font-weight: 800; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-size: 14px; color: var(--muted); margin-top: 8px; }
+  .stat .lbl small { display: block; font-size: 12px; margin-top: 2px; }
+  .stat.fail .badge { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
+  .stat.skipt .badge { background: color-mix(in srgb, var(--skip) 20%, transparent); color: var(--skip); }
+  .stat.streakt .badge { background: color-mix(in srgb, #f97316 18%, transparent); color: #f97316; }
+
+  .chart-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 18px; padding: 16px 14px 10px; }
+  .chart-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 0 2px 6px; }
+  .chart-head h4 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+  .chart-legend { display: flex; gap: 14px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .chart-legend .ln { width: 14px; height: 0; border-top: 2.5px solid var(--c); border-radius: 2px; }
+  .chart-legend .ln.fail { border-top: 2px dashed var(--danger); }
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart text { fill: var(--muted); font-size: 10px; font-family: inherit; }
+  .chart text.cur { fill: var(--text); font-weight: 700; }
+  .chart .gl { stroke: var(--border); stroke-dasharray: 2 4; }
+  .chart .guide { stroke: var(--muted); stroke-dasharray: 3 3; }
+  .chart .done-line { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; }
+  .chart .fail-line { fill: none; stroke: var(--danger); stroke-width: 1.75; stroke-dasharray: 4 4; opacity: .85; }
+  .chart .pt { fill: var(--surface-2); stroke: currentColor; stroke-width: 2; }
+  .chart .pt.last, .chart .pt.hl { fill: currentColor; }
+  .chart rect[data-i] { cursor: pointer; }
+  .chart-tip {
+    position: absolute; top: -6px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 6px 10px; font-size: 12px; color: var(--muted); white-space: nowrap; pointer-events: none;
+    box-shadow: 0 6px 20px rgba(0,0,0,.3);
+  }
+  .chart-tip b { display: block; color: var(--text); font-size: 13px; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cal-nav h4 { margin: 0; font-size: 16px; text-align: center; }
+  .cal-nav small { display: block; font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+  .cal-nav .icon-btn:disabled { opacity: .3; cursor: default; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%; max-width: 420px; margin: 0 auto; }
+  .cal .wd { font-size: 11px; color: var(--muted); text-align: center; font-weight: 600; }
+  .cal .d {
+    aspect-ratio: 1; border-radius: 10px; display: grid; place-items: center; font-size: 14px; font-weight: 600;
+    position: relative; border: 0; padding: 0; background: var(--surface-2); color: var(--text); cursor: pointer;
+  }
+  .cal .d.empty { background: none; cursor: default; }
+  .cal .d.done { background: var(--c); color: var(--on); }
+  .cal .d.skip { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--skip) 60%, transparent) 0 3px, transparent 3px 7px), var(--surface-2); }
+  .cal .d.miss { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
+  .cal .d.off, .cal .d.pre { background: none; color: var(--muted); }
+  .cal .d.pre { opacity: .5; }
+  .cal .d.fut { background: none; color: var(--muted); opacity: .7; cursor: default; }
+  .cal .d.fut.due::after { content: ''; position: absolute; bottom: 12%; width: 4px; height: 4px; border-radius: 50%; background: var(--c); }
+  .cal .d.today { box-shadow: inset 0 0 0 2px var(--text); }
+  .cal .d.sel { outline: 2px solid var(--c); outline-offset: 2px; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 12px; }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .cal-legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+  .day-bar { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+  .day-bar .lbl { flex: 1; min-width: 150px; font-size: 14px; font-weight: 600; }
+  .day-bar .lbl small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
+  .day-bar .pop-btns button { background: var(--surface); }
+  .day-bar.hint { color: var(--muted); font-size: 13px; }
+  @media (max-width: 420px) { .cal { gap: 4px; } .stat b { font-size: 32px; } .stat { min-height: 112px; } }
+
   /* Empty */
   .empty { text-align: center; padding: 56px 16px; }
   .empty h2 { margin: 18px 0 6px; font-size: 20px; }
@@ -327,6 +451,8 @@
     </div>
   </header>
 
+  <section class="streak" id="streak" hidden aria-live="polite"></section>
+
   <div class="legend" id="legend">
     <span><i style="background:var(--accent)"></i>Done</span>
     <span><i class="skip"></i>Skipped</span>
@@ -443,10 +569,18 @@
     <div class="dlg-foot">
       <button type="button" class="btn danger" id="delBtn">Delete</button>
       <span class="spacer"></span>
-      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="button" class="btn" id="cancelBtn">Cancel</button>
       <button type="submit" class="btn primary">Save</button>
     </div>
   </form>
+</dialog>
+
+<!-- Detail dialog -->
+<dialog id="detDlg" class="wide" aria-label="Habit details">
+  <div class="det-top" id="detTop"></div>
+  <div class="det-pane" id="detStats"></div>
+  <div class="det-pane" id="detCal" hidden></div>
+  <div class="det-pane edit" id="detEdit" hidden></div>
 </dialog>
 
 <!-- Data dialog -->
@@ -485,6 +619,13 @@
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
     pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>',
+    chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    chevL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+    hash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 9h14M5 15h14M10 4L8 20M16 4l-2 16"/></svg>',
+    flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.8 3.4 5 5.6 5 10.2A5 5 0 0 1 7 13.5c0-2.1 1-3.6 2.1-4.6.2 1.7 1 2.7 2 2.8-.2-3 .2-5.8.9-8.7z"/></svg>',
+    chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></svg>',
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>',
     smile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/></svg>'
   };
 
@@ -595,31 +736,93 @@
     return parse(s);
   }
 
+  // Per-habit stats. Streak = consecutive scheduled days done; skips don't break it,
+  // and today doesn't break it while it's still open.
   function stats(h) {
     const t = today(), tk = key(t), start = startOf(h);
-    // Streak: consecutive scheduled days completed. Skips don't break it; today is allowed to be pending.
-    let streak = 0;
-    let d = t;
-    if (isDue(h, t) && !h.log[tk]) d = addDays(t, -1);
-    while (d >= start) {
-      if (isDue(h, d)) {
-        const s = h.log[key(d)];
-        if (s === 'done') streak++;
-        else if (s !== 'skip') break;
-      }
-      d = addDays(d, -1);
-    }
-    // Completion rate over scheduled days (skips excluded).
-    let due = 0, done = 0;
-    for (d = start; d <= t; d = addDays(d, 1)) {
+    let run = 0, best = 0, due = 0, done = 0, skipped = 0, missed = 0;
+    for (let d = start; d <= t; d = addDays(d, 1)) {
       if (!isDue(h, d)) continue;
       const k = key(d), s = h.log[k];
-      if (s === 'skip') continue;
-      if (k === tk && !s) continue;
-      due++;
-      if (s === 'done') done++;
+      if (s === 'skip') { skipped++; continue; }
+      if (s === 'done') { done++; due++; run++; if (run > best) best = run; continue; }
+      if (k === tk) continue;
+      due++; missed++; run = 0;
     }
-    return { streak, pct: due ? Math.round(done / due * 100) : null };
+    const doneAll = Object.values(h.log).filter(v => v === 'done').length;
+    return { streak: run, best, pct: due ? Math.round(done / due * 100) : null, done: doneAll, skipped, missed };
+  }
+
+  const diffDays = (a, b) => Math.round((b - a) / 864e5);
+
+  // Overall streak across all habits: a day is "ok" when every habit scheduled that day
+  // is done or skipped (with at least one done). Days with nothing scheduled don't break it.
+  // Today doesn't break it while habits are still open.
+  function overall() {
+    const hs = state.habits;
+    if (!hs.length) return null;
+    const t = today(), tk = key(t);
+    const starts = hs.map(h => [h, startOf(h)]);
+    const earliest = starts.reduce((a, [, s]) => (s < a ? s : a), t);
+    const dayState = d => {
+      const k = key(d);
+      let anyDone = false, open = false;
+      for (const [h, s] of starts) {
+        if (d < s || !isDue(h, d)) continue;
+        const st = h.log[k];
+        if (st === 'skip') continue;
+        if (st === 'done') anyDone = true; else open = true;
+      }
+      if (open) return k === tk ? 'pending' : 'miss';
+      return anyDone ? 'ok' : 'neutral';
+    };
+    let runStart = null, last = null, best = 0;
+    for (let d = earliest; d <= t; d = addDays(d, 1)) {
+      const s = dayState(d);
+      if (s === 'miss') {
+        if (runStart) best = Math.max(best, diffDays(runStart, last) + 1);
+        runStart = last = null;
+      } else if (s === 'ok') {
+        if (!runStart) runStart = d;
+        last = d;
+      } else if (s === 'neutral' && runStart) {
+        last = d;
+      }
+    }
+    const current = runStart ? diffDays(runStart, last) + 1 : 0;
+    best = Math.max(best, current);
+    const week = [];
+    for (let i = 6; i >= 0; i--) { const d = addDays(t, -i); week.push({ d, s: dayState(d), today: i === 0 }); }
+    return { current, best, since: runStart, todayState: dayState(t), week };
+  }
+
+  function renderStreak() {
+    const el = $('#streak');
+    const o = overall();
+    el.hidden = !o;
+    if (!o) return;
+    const plural = n => `${n} day${n === 1 ? '' : 's'}`;
+    let sub;
+    if (o.todayState === 'pending') sub = o.current ? `Finish today’s habits to make it ${plural(o.current + 1)}` : 'Finish today’s habits to start one';
+    else if (o.todayState === 'ok') sub = 'All done today — nice!';
+    else sub = 'Nothing left for today';
+    if (o.best > 0) sub += ` · best ${plural(o.best)}`;
+    const title = o.current ? `${o.current}-day streak` : 'No streak yet';
+    const names = { ok: 'all done', miss: 'missed', pending: 'still open', neutral: 'nothing scheduled' };
+    const week = o.week.map(w => {
+      const letter = w.d.toLocaleDateString(LOC, { weekday: 'narrow' });
+      const icon = w.s === 'ok' ? ICON.check : w.s === 'miss' ? ICON.close : '';
+      return `<div><i class="${w.s}${w.today ? ' today' : ''}" title="${esc(fmtLong(w.d))}: ${names[w.s]}">${icon}</i>${letter}</div>`;
+    }).join('');
+    el.innerHTML = `
+      <div class="streak-main">
+        <div class="streak-flame ${o.current ? '' : 'cold'}" aria-hidden="true">🔥</div>
+        <div>
+          <div class="streak-num">${title}</div>
+          <div class="streak-sub">${esc(sub)}</div>
+        </div>
+      </div>
+      <div class="streak-week" aria-label="Last 7 days">${week}</div>`;
   }
 
   function freqLabel(h) {
@@ -644,9 +847,9 @@
     const icon = h.emoji ? esc(h.emoji) : esc(([...h.title.trim()][0] || '?').toUpperCase());
     return `<article class="card" data-id="${esc(h.id)}" style="--c:${h.color};--on:${onColor(h.color)}">
       <div class="card-head">
-        <div class="emoji" aria-hidden="true">${icon}</div>
-        <div class="titles">
-          <h2>${esc(h.title)}</h2>
+        <div class="emoji" data-act="detail" aria-hidden="true">${icon}</div>
+        <div class="titles" data-act="detail" role="button" tabindex="0" aria-label="Open details for ${esc(h.title)}">
+          <h2><span>${esc(h.title)}</span>${ICON.chev}</h2>
           ${h.desc ? `<p class="desc">${esc(h.desc)}</p>` : ''}
           <div class="meta">
             <span class="pill">${esc(freqLabel(h))}</span>
@@ -716,6 +919,7 @@
       extra = dueToday.length ? ` · ${doneToday}/${dueToday.length} done today` : ' · nothing scheduled today';
     }
     $('#todayLabel').textContent = date + extra;
+    renderStreak();
   }
 
   function render() {
@@ -749,6 +953,7 @@
     if (s) h.log[k] = s; else delete h.log[k];
     save();
     updateCard(id);
+    if (detDlg.open && detId === id) renderDetail();
   }
 
   /* ---------- Day popover ---------- */
@@ -810,10 +1015,292 @@
     const id = btn.closest('.card').dataset.id, h = byId(id), tk = key(today());
     const act = btn.dataset.act;
     if (act === 'edit') { openDialog(h); return; }
+    if (act === 'detail') { openDetail(h); return; }
     const target = act === 'check' ? 'done' : 'skip';
     const next = h.log[tk] === target ? null : target;
     setDay(id, tk, next);
     if (next === 'done' && navigator.vibrate) navigator.vibrate(12);
+  });
+
+  $('#list').addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.titles[data-act="detail"]')) {
+      e.preventDefault();
+      openDetail(byId(e.target.closest('.card').dataset.id));
+    }
+  });
+
+  /* ---------- Detail view: Stats / Calendar / Edit ---------- */
+  const detDlg = $('#detDlg'), detTop = $('#detTop'), detStats = $('#detStats'), detCal = $('#detCal'), detEdit = $('#detEdit');
+  let detId = null, detMonth = null, detSel = null, detTab = 'stats';
+
+  function dayStatus(h, d, tk, sk) {
+    const k = key(d), st = h.log[k], due = isDue(h, d);
+    if (k > tk) return { cls: 'fut' + (due ? ' due' : ''), label: due ? 'Scheduled' : 'Not scheduled' };
+    if (st === 'done') return { cls: 'done', label: 'Done' };
+    if (st === 'skip') return { cls: 'skip', label: 'Skipped' };
+    if (k < sk) return { cls: 'pre', label: 'Before start' };
+    if (!due) return { cls: 'off', label: 'Not scheduled' };
+    if (k === tk) return { cls: 'open', label: 'Open — not done yet' };
+    return { cls: 'miss', label: 'Missed' };
+  }
+
+  function openDetail(h, tab) {
+    if (!h) return;
+    closePop();
+    const t = today(), s0 = startOf(h);
+    detId = h.id;
+    const base = s0 > t ? s0 : t;
+    detMonth = new Date(base.getFullYear(), base.getMonth(), 1);
+    detSel = s0 > t ? null : key(t);
+    if (!detDlg.open) detDlg.showModal();
+    detDlg.scrollTop = 0;
+    showTab(tab || 'stats');
+  }
+
+  function showTab(tab) {
+    detTab = tab;
+    if (tab === 'edit') {
+      const h = byId(detId);
+      fillForm(h);
+      detEdit.appendChild(form);
+    }
+    renderDetail();
+  }
+
+  function renderDetail() {
+    const h = byId(detId);
+    if (!h) { detDlg.close(); return; }
+    detDlg.style.setProperty('--c', h.color);
+    detDlg.style.setProperty('--on', onColor(h.color));
+    const icon = h.emoji ? esc(h.emoji) : esc(([...h.title.trim()][0] || '?').toUpperCase());
+    const tabs = [['stats', ICON.chart, 'Stats'], ['cal', ICON.cal, 'Calendar'], ['edit', ICON.edit, 'Edit']];
+    detTop.innerHTML = `
+      <div class="det-head">
+        <div class="emoji" aria-hidden="true">${icon}</div>
+        <div class="grow">
+          <h3>${esc(h.title)}</h3>
+          <p class="det-desc">${h.desc ? esc(h.desc) + ' · ' : ''}${esc(freqLabel(h))}</p>
+        </div>
+        <button type="button" class="icon-btn" data-close aria-label="Close">${ICON.close}</button>
+      </div>
+      <div class="tabs" role="tablist">
+        ${tabs.map(([id, ic, label]) => `<button type="button" role="tab" data-tab="${id}" aria-selected="${detTab === id}" class="${detTab === id ? 'on' : ''}">${ic}${label}</button>`).join('')}
+      </div>`;
+    detStats.hidden = detTab !== 'stats';
+    detCal.hidden = detTab !== 'cal';
+    detEdit.hidden = detTab !== 'edit';
+    if (detTab === 'stats') renderStatsPane(h);
+    if (detTab === 'cal') renderCalPane(h);
+  }
+
+  /* Stats pane: tiles + completions per month chart */
+  function renderStatsPane(h) {
+    const st = stats(h);
+    const skipsAll = Object.values(h.log).filter(v => v === 'skip').length;
+    const tile = (cls, ic, num, label, extra = '') =>
+      `<div class="stat ${cls}"><span class="badge">${ic}</span><b>${num}</b><span class="lbl">${label}${extra}</span></div>`;
+    detStats.innerHTML = `
+      <div class="stats">
+        ${tile('', ICON.hash, st.done, 'Completions')}
+        ${tile('fail', ICON.close, st.missed, 'Fails')}
+        ${tile('skipt', ICON.skip, skipsAll, 'Skips')}
+        ${tile('streakt', ICON.flame, st.streak, 'Current streak', `<small>Best ${st.best}</small>`)}
+      </div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <h4>Completions / Month</h4>
+            <div class="chart-legend"><span><i class="ln"></i>Completions</span><span><i class="ln fail"></i>Fails</span></div>
+          </div>
+          <span class="badge">${ICON.chart}</span>
+        </div>
+        <div class="chart" id="chartBox"></div>
+      </div>`;
+    drawChart(h, $('#chartBox'));
+  }
+
+  function monthSeries(h) {
+    const t = today(), tk = key(t), sk = key(startOf(h)), s0 = startOf(h);
+    const cur = new Date(t.getFullYear(), t.getMonth(), 1);
+    let first = new Date(s0.getFullYear(), s0.getMonth(), 1);
+    const min = new Date(cur.getFullYear(), cur.getMonth() - 11, 1);
+    const max = new Date(cur.getFullYear(), cur.getMonth() - 5, 1);
+    if (first < min) first = min;
+    if (first > max) first = max;
+    const out = [];
+    for (let m = first; m <= cur; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
+      const dim = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+      let done = 0, fail = 0, skip = 0;
+      for (let i = 1; i <= dim; i++) {
+        const d = new Date(m.getFullYear(), m.getMonth(), i), k = key(d);
+        if (k > tk) break;
+        const s = h.log[k];
+        if (s === 'done') done++;
+        else if (s === 'skip') skip++;
+        else if (k >= sk && k < tk && isDue(h, d)) fail++;
+      }
+      out.push({ m, done, fail, skip });
+    }
+    return out;
+  }
+
+  // Smooth line through points without overshooting (monotone cubic).
+  function smoothPath(xs, ys) {
+    const n = xs.length;
+    if (n < 2) return `M${xs[0]},${ys[0]}`;
+    const dx = [], sl = [], tg = [];
+    for (let i = 0; i < n - 1; i++) { dx[i] = xs[i + 1] - xs[i]; sl[i] = (ys[i + 1] - ys[i]) / dx[i]; }
+    tg[0] = sl[0]; tg[n - 1] = sl[n - 2];
+    for (let i = 1; i < n - 1; i++) tg[i] = sl[i - 1] * sl[i] <= 0 ? 0 : (sl[i - 1] + sl[i]) / 2;
+    for (let i = 0; i < n - 1; i++) {
+      if (sl[i] === 0) { tg[i] = 0; tg[i + 1] = 0; continue; }
+      const a = tg[i] / sl[i], b = tg[i + 1] / sl[i], s = a * a + b * b;
+      if (s > 9) { const k = 3 / Math.sqrt(s); tg[i] = k * a * sl[i]; tg[i + 1] = k * b * sl[i]; }
+    }
+    let d = `M${xs[0].toFixed(1)},${ys[0].toFixed(1)}`;
+    for (let i = 0; i < n - 1; i++) {
+      const h3 = dx[i] / 3;
+      d += ` C${(xs[i] + h3).toFixed(1)},${(ys[i] + tg[i] * h3).toFixed(1)} ${(xs[i + 1] - h3).toFixed(1)},${(ys[i + 1] - tg[i + 1] * h3).toFixed(1)} ${xs[i + 1].toFixed(1)},${ys[i + 1].toFixed(1)}`;
+    }
+    return d;
+  }
+
+  function drawChart(h, box) {
+    const data = monthSeries(h), n = data.length;
+    const W = Math.max(260, box.clientWidth || 480), H = 190;
+    const pl = 28, pr = 14, pt = 14, pb = 26, iw = W - pl - pr, ih = H - pt - pb;
+    const top = Math.max(...data.map(d => Math.max(d.done, d.fail)));
+    const nice = top <= 4 ? 4 : top <= 10 ? 10 : Math.ceil(top / 10) * 10;
+    const xs = data.map((_, i) => pl + (n === 1 ? iw / 2 : i * iw / (n - 1)));
+    const y = v => pt + ih - (v / nice) * ih;
+    const yd = data.map(d => y(d.done)), yf = data.map(d => y(d.fail));
+    const line = smoothPath(xs, yd);
+    const area = `${line} L${xs[n - 1].toFixed(1)},${pt + ih} L${xs[0].toFixed(1)},${pt + ih} Z`;
+    const hasFails = data.some(d => d.fail > 0);
+    const gid = 'g' + h.id.replace(/[^a-z0-9]/gi, '');
+    const grid = [0, nice / 2, nice].map(v =>
+      `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" class="gl"/><text x="${pl - 8}" y="${y(v) + 3.5}" text-anchor="end">${Math.round(v)}</text>`).join('');
+    const months = data.map((d, i) =>
+      `<text x="${xs[i]}" y="${H - 7}" text-anchor="middle" class="${i === n - 1 ? 'cur' : ''}">${d.m.toLocaleDateString(LOC, { month: 'short' }).replace('Sept', 'Sep')}</text>`).join('');
+    const dots = data.map((d, i) => `<circle cx="${xs[i]}" cy="${yd[i]}" r="${i === n - 1 ? 4.5 : 3}" class="pt${i === n - 1 ? ' last' : ''}"/>`).join('');
+    const colW = n > 1 ? iw / (n - 1) : iw;
+    const hits = data.map((_, i) => `<rect x="${xs[i] - colW / 2}" y="0" width="${colW}" height="${H}" data-i="${i}" fill="transparent"/>`).join('');
+    box.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="color:${h.color}" role="img" aria-label="Completions per month">
+        <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="currentColor" stop-opacity=".45"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/>
+        </linearGradient></defs>
+        ${grid}
+        <line class="guide" x1="0" x2="0" y1="${pt}" y2="${pt + ih}" visibility="hidden"/>
+        <path d="${area}" fill="url(#${gid})"/>
+        ${hasFails ? `<path d="${smoothPath(xs, yf)}" class="fail-line"/>` : ''}
+        <path d="${line}" class="done-line"/>
+        ${dots}
+        ${months}
+        ${hits}
+      </svg>
+      <div class="chart-tip" hidden></div>`;
+    box._chart = { data, xs, yd, W };
+  }
+
+  function showChartTip(box, i) {
+    const c = box._chart;
+    if (!c) return;
+    const d = c.data[i], tip = $('.chart-tip', box), guide = $('.guide', box);
+    guide.setAttribute('x1', c.xs[i]); guide.setAttribute('x2', c.xs[i]); guide.setAttribute('visibility', 'visible');
+    $$('.pt', box).forEach((p, j) => p.classList.toggle('hl', j === i));
+    tip.innerHTML = `<b>${esc(d.m.toLocaleDateString(LOC, { month: 'long', year: 'numeric' }))}</b>${d.done} done · ${d.fail} fails · ${d.skip} skips`;
+    tip.hidden = false;
+    const tw = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(c.W - tw, c.xs[i] - tw / 2)) + 'px';
+  }
+  function hideChartTip(box) {
+    const tip = box && $('.chart-tip', box);
+    if (!tip) return;
+    tip.hidden = true;
+    $('.guide', box).setAttribute('visibility', 'hidden');
+    $$('.pt', box).forEach(p => p.classList.remove('hl'));
+  }
+  detStats.addEventListener('pointermove', e => {
+    const r = e.target.closest('rect[data-i]');
+    if (r) showChartTip(r.closest('.chart'), +r.dataset.i);
+  });
+  detStats.addEventListener('click', e => {
+    const r = e.target.closest('rect[data-i]');
+    if (r) showChartTip(r.closest('.chart'), +r.dataset.i);
+  });
+  detStats.addEventListener('pointerleave', () => hideChartTip($('#chartBox')));
+
+  /* Calendar pane */
+  function renderCalPane(h) {
+    const t = today(), tk = key(t), s0 = startOf(h), sk = key(s0);
+    const y = detMonth.getFullYear(), m = detMonth.getMonth();
+    const first = new Date(y, m, 1), dim = new Date(y, m + 1, 0).getDate(), lead = (first.getDay() + 6) % 7;
+    let cells = WD.map(d => `<div class="wd">${d.slice(0, 2)}</div>`).join('') + '<div class="d empty"></div>'.repeat(lead);
+    let mDone = 0, mSkip = 0, mMiss = 0;
+    for (let i = 1; i <= dim; i++) {
+      const d = new Date(y, m, i), k = key(d), ds = dayStatus(h, d, tk, sk);
+      if (ds.cls === 'done') mDone++; else if (ds.cls === 'skip') mSkip++; else if (ds.cls === 'miss') mMiss++;
+      const cls = ds.cls + (k === tk ? ' today' : '') + (k === detSel ? ' sel' : '');
+      cells += `<button type="button" class="d ${cls}" data-d="${k}" ${k > tk ? 'disabled' : ''} aria-label="${esc(fmtLong(d))}: ${ds.label}">${i}</button>`;
+    }
+    const minMonth = new Date(s0.getFullYear(), s0.getMonth(), 1);
+    const maxMonth = new Date(t.getFullYear(), t.getMonth() + 6, 1);
+    const monthName = first.toLocaleDateString(LOC, { month: 'long', year: 'numeric' });
+    const monthSummary = `${mDone} done · ${mSkip} skipped · ${mMiss} missed`;
+
+    let dayBar;
+    if (detSel && detSel <= tk) {
+      const sd = parse(detSel), ds = dayStatus(h, sd, tk, sk), cur = h.log[detSel];
+      dayBar = `<div class="day-bar">
+        <div class="lbl">${esc(fmtLong(sd))}<small>${ds.label}</small></div>
+        <div class="pop-btns">
+          <button type="button" data-s="done" class="${cur === 'done' ? 'on' : ''}">${ICON.check}Done</button>
+          <button type="button" data-s="skip" class="${cur === 'skip' ? 'on' : ''}">${ICON.skip}Skip</button>
+          <button type="button" data-s="">Clear</button>
+        </div>
+      </div>`;
+    } else {
+      dayBar = '<div class="day-bar hint">Tap a day to mark it done, skipped or clear it.</div>';
+    }
+
+    detCal.innerHTML = `
+      <div class="cal-nav">
+        <button type="button" class="icon-btn" data-nav="-1" aria-label="Previous month" ${first <= minMonth ? 'disabled' : ''}>${ICON.chevL}</button>
+        <h4>${esc(monthName)}<small>${monthSummary}</small></h4>
+        <button type="button" class="icon-btn" data-nav="1" aria-label="Next month" ${first >= maxMonth ? 'disabled' : ''}>${ICON.chev}</button>
+      </div>
+      <div class="cal">${cells}</div>
+      <div class="cal-legend">
+        <span><i style="background:var(--c)"></i>Done</span>
+        <span><i style="background:repeating-linear-gradient(135deg,var(--skip) 0 2px,transparent 2px 4px),var(--surface-2)"></i>Skipped</span>
+        <span><i style="background:color-mix(in srgb,var(--danger) 30%,transparent)"></i>Missed</span>
+        <span><i style="background:var(--surface-2)"></i>Open</span>
+        <span><i style="border:1px dashed var(--border)"></i>Not scheduled</span>
+      </div>
+      ${dayBar}`;
+  }
+
+  detTop.addEventListener('click', e => {
+    const tb = e.target.closest('[data-tab]');
+    if (tb && tb.dataset.tab !== detTab) showTab(tb.dataset.tab);
+  });
+
+  detCal.addEventListener('click', e => {
+    const nav = e.target.closest('[data-nav]');
+    if (nav && !nav.disabled) {
+      detMonth = new Date(detMonth.getFullYear(), detMonth.getMonth() + Number(nav.dataset.nav), 1);
+      renderDetail();
+      return;
+    }
+    const day = e.target.closest('.d[data-d]');
+    if (day && !day.disabled) {
+      detSel = day.dataset.d;
+      renderDetail();
+      return;
+    }
+    const s = e.target.closest('button[data-s]');
+    if (s && detSel) setDay(detId, detSel, s.dataset.s || null);
   });
 
   /* ---------- Habit dialog ---------- */
@@ -938,8 +1425,17 @@
     renderDates();
   });
 
+  // New habit → standalone dialog. Existing habit → the Edit tab of the detail window.
   function openDialog(h) {
     closePop();
+    if (h) { openDetail(h, 'edit'); return; }
+    dlg.appendChild(form);
+    fillForm(null);
+    dlg.showModal();
+    if (window.matchMedia('(pointer: fine)').matches) $('#fTitle').focus();
+  }
+
+  function fillForm(h) {
     editingId = h ? h.id : null;
     form.reset();
     const t = today();
@@ -962,10 +1458,9 @@
     $('#dateIn').value = '';
     renderDates();
     showFreq(f.type);
-
-    dlg.showModal();
-    if (!h && window.matchMedia('(pointer: fine)').matches) $('#fTitle').focus();
   }
+
+  const formInDetail = () => detEdit.contains(form);
 
   function firstGrapheme(s) {
     s = s.trim();
@@ -1012,8 +1507,17 @@
       state.habits.push(normalize({ ...data, id: uid(), log: {} }));
     }
     save();
-    dlg.close();
     render();
+    if (formInDetail()) {
+      showTab('stats');
+      toast('Changes saved');
+    } else {
+      dlg.close();
+    }
+  });
+
+  $('#cancelBtn').addEventListener('click', () => {
+    if (formInDetail()) showTab('stats'); else dlg.close();
   });
 
   $('#delBtn').addEventListener('click', () => {
@@ -1022,7 +1526,7 @@
     if (!confirm(`Delete “${h.title}” and all of its history?`)) return;
     state.habits = state.habits.filter(x => x.id !== editingId);
     save();
-    dlg.close();
+    if (formInDetail()) detDlg.close(); else dlg.close();
     render();
     toast('Habit deleted');
   });
@@ -1096,7 +1600,10 @@
     lastW = window.innerWidth;
     closePop();
     cancelAnimationFrame(rz);
-    rz = requestAnimationFrame(() => $$('.card').forEach(el => drawHeatmap(el, byId(el.dataset.id))));
+    rz = requestAnimationFrame(() => {
+      $$('.card').forEach(el => drawHeatmap(el, byId(el.dataset.id)));
+      if (detDlg.open && detTab === 'stats') renderDetail();
+    });
   });
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && key(today()) !== renderedDay) render();

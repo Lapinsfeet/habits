@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Habit Heatmaps</title>
 <meta name="description" content="Track your habits as heatmaps.">
-<meta name="theme-color" content="#0e1014" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" id="themeColor" content="#0e1014">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -72,7 +71,7 @@
     white-space: nowrap;
   }
   .btn svg { width: 18px; height: 18px; }
-  .btn.primary { background: var(--accent); border-color: transparent; color: #fff; }
+  .btn.primary { background: var(--accent); border-color: transparent; color: var(--accent-on, #fff); }
   .btn.danger { color: var(--danger); }
   .icon-btn {
     width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border);
@@ -80,9 +79,9 @@
   }
 
   /* Legend */
-  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 12px; margin: 0 2px 14px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 12px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  .legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent); }
   .swipe-hint { display: none !important; }
   @media (max-width: 760px) { .swipe-hint { display: inline-flex !important; } }
 
@@ -291,6 +290,60 @@
   .day-bar.hint { color: var(--muted); font-size: 13px; }
   @media (max-width: 420px) { .cal { gap: 4px; } .stat b { font-size: 32px; } .stat { min-height: 112px; } }
 
+  /* Toolbar: legend + quick view toggle */
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; margin: 0 2px 14px; }
+  .view-toggle { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 2px; gap: 2px; }
+  .view-toggle button { border: 0; background: none; width: 34px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); padding: 0; }
+  .view-toggle button svg { width: 17px; height: 17px; }
+  .view-toggle button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+  /* Views */
+  :root[data-view="cards"] .wrap { max-width: 1120px; }
+  :root[data-view="cards"] .list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+  :root[data-view="cards"] .card { padding: 14px; }
+  :root[data-view="cards"] .card .desc,
+  :root[data-view="compact"] .card .desc { display: none; }
+  :root[data-view="compact"] .list { gap: 10px; }
+  :root[data-view="compact"] .card { padding: 12px 14px; border-radius: 16px; }
+  :root[data-view="compact"] .card .emoji { width: 36px; height: 36px; font-size: 18px; border-radius: 10px; }
+  :root[data-view="compact"] .card .meta { margin-top: 4px; }
+  :root[data-view="compact"] .card .hm-scroll { margin-top: 10px; }
+  :root[data-view="compact"] .swipe-hint { display: none !important; }
+  .strip { display: flex; gap: 3px; justify-content: flex-end; }
+  .strip .c { width: var(--cs); height: var(--cs); flex-shrink: 0; }
+
+  /* Settings */
+  .set-sec { display: flex; flex-direction: column; gap: 14px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .set-h { margin: 0; font-size: 15px; }
+  .seg.three { grid-template-columns: repeat(3, 1fr); }
+  .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 8px; }
+  .theme-tile {
+    border: 1px solid var(--border); background: var(--surface-2); border-radius: 14px; padding: 6px;
+    display: flex; flex-direction: column; gap: 6px; text-align: left; color: var(--text);
+  }
+  .theme-tile.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .tp { display: block; background: var(--tb); border-radius: 10px; padding: 9px; }
+  .tp-card { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; background: var(--ts); border-radius: 7px; padding: 7px; }
+  .tp-card i { aspect-ratio: 1; border-radius: 2px; background: var(--tc); }
+  .tp-card i.a { background: var(--ta); }
+  .tn { font-size: 13px; font-weight: 600; padding: 0 4px 2px; display: flex; justify-content: space-between; align-items: center; }
+  .tn em { font-style: normal; width: 10px; height: 10px; border-radius: 50%; background: var(--ta); }
+  .swatches .auto-sw span { display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 1; font-weight: 800; color: var(--accent-on, #fff); }
+  .view-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .view-opt {
+    border: 1px solid var(--border); background: var(--surface-2); border-radius: 14px; padding: 12px;
+    text-align: left; display: flex; flex-direction: column; gap: 6px; color: var(--text);
+  }
+  .view-opt svg { width: 22px; height: 22px; color: var(--muted); flex-shrink: 0; }
+  .view-opt b { font-size: 14px; display: block; }
+  .view-opt span { font-size: 12px; color: var(--muted); line-height: 1.35; }
+  .view-opt.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .view-opt.on svg { color: var(--accent); }
+  @media (max-width: 480px) {
+    .view-opts { grid-template-columns: 1fr; }
+    .view-opt { flex-direction: row; align-items: center; gap: 12px; }
+  }
+
   /* Empty */
   .empty { text-align: center; padding: 56px 16px; }
   .empty h2 { margin: 18px 0 6px; font-size: 20px; }
@@ -408,7 +461,7 @@
     display: block; padding: 7px 0; width: 48px; text-align: center; border-radius: 10px;
     background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--muted);
   }
-  .wd input:checked + span { background: var(--accent); color: #fff; border-color: transparent; }
+  .wd input:checked + span { background: var(--accent); color: var(--accent-on, #fff); border-color: transparent; }
   .wd input:focus-visible + span { outline: 2px solid var(--text); }
   .date-list { margin-top: 10px; }
   .date-chip {
@@ -446,19 +499,22 @@
       <p class="sub" id="todayLabel"></p>
     </div>
     <div class="top-actions">
-      <button class="icon-btn" id="dataBtn" title="Backup & restore" aria-label="Backup and restore"></button>
+      <button class="icon-btn" id="setBtn" title="Settings" aria-label="Settings"></button>
       <button class="btn primary" id="addBtn" aria-label="New habit"></button>
     </div>
   </header>
 
   <section class="streak" id="streak" hidden aria-live="polite"></section>
 
+  <div class="toolbar" id="toolbar">
   <div class="legend" id="legend">
     <span><i style="background:var(--accent)"></i>Done</span>
     <span><i class="skip"></i>Skipped</span>
     <span><i style="background:var(--cell)"></i>Missed / open</span>
     <span><i style="background:var(--cell-off)"></i>Not scheduled</span>
     <span class="swipe-hint">Swipe a heatmap sideways to see more days</span>
+  </div>
+  <div class="view-toggle" id="viewToggle" role="group" aria-label="Habit view"></div>
   </div>
 
   <main class="list" id="list"></main>
@@ -583,19 +639,52 @@
   <div class="det-pane edit" id="detEdit" hidden></div>
 </dialog>
 
-<!-- Data dialog -->
-<dialog id="dataDlg">
+<!-- Settings dialog -->
+<dialog id="setDlg" class="wide" aria-label="Settings">
   <div class="dlg-body">
     <div class="dlg-head">
-      <h3>Backup &amp; restore</h3>
+      <h3>Settings</h3>
       <button type="button" class="icon-btn" data-close aria-label="Close"></button>
     </div>
-    <p class="hint" style="font-size:14px">Your habits are stored in this browser on this device. Export a backup file to keep it safe or to move your habits to another phone or computer.</p>
-    <div class="row" style="flex-wrap:wrap">
-      <button class="btn" id="exportBtn">Export backup</button>
-      <button class="btn" id="importBtn">Import backup</button>
-      <input type="file" id="importFile" accept="application/json,.json" hidden>
-    </div>
+
+    <section class="set-sec" style="border-top:0;padding-top:0">
+      <h4 class="set-h">Appearance</h4>
+      <fieldset class="field">
+        <legend>Mode</legend>
+        <div class="seg three" id="modeSeg">
+          <label><input type="radio" name="mode" value="system"><span>System</span></label>
+          <label><input type="radio" name="mode" value="light"><span>Light</span></label>
+          <label><input type="radio" name="mode" value="dark"><span>Dark</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="field">
+        <legend>Theme</legend>
+        <div class="themes" id="themeGrid"></div>
+      </fieldset>
+      <fieldset class="field">
+        <legend>Accent color</legend>
+        <div class="swatches" id="accentSw"></div>
+        <div class="hex-row">
+          <input class="input" id="accentHex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Accent hex color">
+          <span class="hint">Used for buttons and highlights. “A” follows the theme’s own accent.</span>
+        </div>
+      </fieldset>
+    </section>
+
+    <section class="set-sec">
+      <h4 class="set-h">Habit view</h4>
+      <div class="view-opts" id="viewOpts"></div>
+    </section>
+
+    <section class="set-sec" id="dataSec">
+      <h4 class="set-h">Backup &amp; restore</h4>
+      <p class="hint" style="font-size:14px">Your habits and settings are stored in this browser on this device. Export a backup file to keep them safe or move them to another phone or computer.</p>
+      <div class="row" style="flex-wrap:wrap">
+        <button class="btn" id="exportBtn">Export backup</button>
+        <button class="btn" id="importBtn">Import backup</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+    </section>
   </div>
 </dialog>
 
@@ -606,6 +695,68 @@
   'use strict';
 
   const STORE = 'habit-heatmaps.v1';
+  const SETTINGS_KEY = 'habit-heatmaps.settings';
+
+  /* ---------- Themes ---------- */
+  // Each theme has a dark and a light palette.
+  const THEMES = {
+    default: { name: 'Default',
+      dark:  { bg: '#0e1014', surface: '#171a21', 'surface-2': '#1f232c', border: '#272c37', text: '#eceef3', muted: '#8a91a1', cell: '#262b36', 'cell-off': '#1c2028', skip: '#9aa4b8', accent: '#7c5cff', danger: '#ff5d6c' },
+      light: { bg: '#f4f5f7', surface: '#ffffff', 'surface-2': '#f0f1f4', border: '#e4e6eb', text: '#16181d', muted: '#6a7180', cell: '#e3e6ec', 'cell-off': '#f2f3f6', skip: '#8e98ab', accent: '#7c5cff', danger: '#e5484d' } },
+    catppuccin: { name: 'Catppuccin',
+      dark:  { bg: '#181825', surface: '#1e1e2e', 'surface-2': '#292a3e', border: '#313244', text: '#cdd6f4', muted: '#9399b2', cell: '#313244', 'cell-off': '#242536', skip: '#7f849c', accent: '#cba6f7', danger: '#f38ba8' },
+      light: { bg: '#e6e9ef', surface: '#eff1f5', 'surface-2': '#e2e5ec', border: '#ccd0da', text: '#4c4f69', muted: '#6c6f85', cell: '#ccd0da', 'cell-off': '#e6e9ef', skip: '#8c8fa1', accent: '#8839ef', danger: '#d20f39' } },
+    mint: { name: 'Mint',
+      dark:  { bg: '#0c1412', surface: '#121f1b', 'surface-2': '#192924', border: '#22352f', text: '#e2f2eb', muted: '#86a399', cell: '#22352f', 'cell-off': '#16241f', skip: '#8fb3a6', accent: '#3ddc97', danger: '#ff6b6b' },
+      light: { bg: '#edf6f2', surface: '#ffffff', 'surface-2': '#e5f2ec', border: '#d2e5dc', text: '#12241d', muted: '#5b786c', cell: '#d2e5dc', 'cell-off': '#eaf4ef', skip: '#86a89a', accent: '#0f9f74', danger: '#e5484d' } },
+    nord: { name: 'Nord',
+      dark:  { bg: '#242933', surface: '#2e3440', 'surface-2': '#353c4a', border: '#3b4252', text: '#eceff4', muted: '#a0a8b7', cell: '#3b4252', 'cell-off': '#323845', skip: '#7b88a1', accent: '#88c0d0', danger: '#bf616a' },
+      light: { bg: '#e5e9f0', surface: '#f4f6f9', 'surface-2': '#eceff4', border: '#d8dee9', text: '#2e3440', muted: '#4c566a', cell: '#d8dee9', 'cell-off': '#e9edf2', skip: '#7b88a1', accent: '#5e81ac', danger: '#bf616a' } },
+    rosepine: { name: 'Rosé Pine',
+      dark:  { bg: '#191724', surface: '#1f1d2e', 'surface-2': '#26233a', border: '#2f2c44', text: '#e0def4', muted: '#908caa', cell: '#2f2c44', 'cell-off': '#232136', skip: '#6e6a86', accent: '#c4a7e7', danger: '#eb6f92' },
+      light: { bg: '#faf4ed', surface: '#fffaf3', 'surface-2': '#f2e9e1', border: '#dfdad9', text: '#575279', muted: '#797593', cell: '#e6ddd5', 'cell-off': '#f4ede4', skip: '#9893a5', accent: '#907aa9', danger: '#b4637a' } },
+    everforest: { name: 'Everforest',
+      dark:  { bg: '#232a2e', surface: '#2d353b', 'surface-2': '#343f44', border: '#3d484d', text: '#d3c6aa', muted: '#859289', cell: '#3d484d', 'cell-off': '#2f383e', skip: '#7a8478', accent: '#a7c080', danger: '#e67e80' },
+      light: { bg: '#f4f0d9', surface: '#fdf6e3', 'surface-2': '#efebd4', border: '#e6e2cc', text: '#5c6a72', muted: '#829181', cell: '#e6e2cc', 'cell-off': '#f0ecd6', skip: '#a6b0a0', accent: '#8da101', danger: '#f85552' } }
+  };
+  const VIEWS = [
+    ['full', 'Full', 'A full-year heatmap per habit, one per row.'],
+    ['cards', 'Cards', 'Smaller cards — two side by side on wider screens.'],
+    ['compact', 'Compact', 'One line of recent days per habit.']
+  ];
+
+  function normSettings(s) {
+    s = s || {};
+    return {
+      mode: ['system', 'light', 'dark'].includes(s.mode) ? s.mode : 'system',
+      theme: THEMES[s.theme] ? s.theme : 'default',
+      accent: /^#[0-9a-f]{6}$/i.test(s.accent) ? s.accent.toLowerCase() : null,
+      view: VIEWS.some(v => v[0] === s.view) ? s.view : 'full'
+    };
+  }
+  function loadSettings() {
+    try { return normSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); } catch (e) { return normSettings(); }
+  }
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* ignore */ }
+  }
+  let settings = loadSettings();
+  const darkMQ = window.matchMedia('(prefers-color-scheme: dark)');
+  const resolvedMode = () => settings.mode === 'system' ? (darkMQ.matches ? 'dark' : 'light') : settings.mode;
+  const palette = (theme, mode) => (THEMES[theme] || THEMES.default)[mode];
+
+  function applyTheme() {
+    const mode = resolvedMode(), pal = palette(settings.theme, mode), root = document.documentElement;
+    for (const [k, v] of Object.entries(pal)) root.style.setProperty('--' + k, v);
+    const accent = settings.accent || pal.accent;
+    root.style.setProperty('--accent', accent);
+    root.style.setProperty('--accent-on', onColor(accent));
+    root.style.setProperty('--shadow', mode === 'dark' ? '0 1px 2px rgba(0,0,0,.3)' : '0 1px 3px rgba(16,24,40,.07)');
+    root.style.colorScheme = mode;
+    root.dataset.view = settings.view;
+    const meta = document.getElementById('themeColor');
+    if (meta) meta.setAttribute('content', pal.bg);
+  }
   const COLORS = ['#7c5cff', '#3b82f6', '#06b6d4', '#10b981', '#84cc16', '#f59e0b', '#f97316', '#ef4444', '#ec4899', '#a855f7'];
   const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const WEEKS = 53, GAP = 3, MIN_CELL = 11, MAX_CELL = 16;
@@ -621,6 +772,7 @@
     pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>',
     chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
     chevL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+    sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>',
     hash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 9h14M5 15h14M10 4L8 20M16 4l-2 16"/></svg>',
     flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.8 3.4 5 5.6 5 10.2A5 5 0 0 1 7 13.5c0-2.1 1-3.6 2.1-4.6.2 1.7 1 2.7 2 2.8-.2-3 .2-5.8.9-8.7z"/></svg>',
     chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></svg>',
@@ -870,15 +1022,17 @@
   function drawHeatmap(card, h, scroll) {
     const sc = $('.hm-scroll', card);
     const w = sc.clientWidth || 600;
-    // Cell size is based on fitting one year (53 weeks) into the card width.
-    const cs = Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor((w - GAP * (WEEKS - 1)) / WEEKS * 10) / 10));
+    if (settings.view === 'compact') return drawStrip(sc, h, w);
+    // Cell size: fit one year (Full) or half a year (Cards) into the card width.
+    const fit = settings.view === 'cards' ? 26 : WEEKS;
+    const cs = Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor((w - GAP * (fit - 1)) / fit * 10) / 10));
     const t = today(), tk = key(t);
     // The grid starts in the top-left corner on the habit's first day and fills forward in time
     // (down each column, then to the next column — every column is 7 consecutive days).
     const s0 = startOf(h), sk = key(s0);
     const start = s0;
     const todayCol = Math.floor(Math.round((t - start) / 864e5) / 7);
-    const cols = Math.max(WEEKS, todayCol + 1);
+    const cols = Math.max(fit, todayCol + 1);
     const labels = [];
     let cells = '';
     for (let c = 0; c < cols; c++) {
@@ -908,6 +1062,21 @@
     }
   }
 
+  // Compact view: one row of the most recent days, today on the right.
+  function drawStrip(sc, h, w) {
+    const cs = 14, n = Math.max(7, Math.floor((w + GAP) / (cs + GAP)));
+    const t = today(), tk = key(t), sk = key(startOf(h));
+    let cells = '';
+    for (let i = n - 1; i >= 0; i--) {
+      const d = addDays(t, -i), k = key(d), s = h.log[k];
+      let cls = s === 'done' ? 'done' : s === 'skip' ? 'skip' : k < sk ? 'pre' : isDue(h, d) ? 'due' : 'off';
+      if (k === tk) cls += ' today';
+      cells += `<span class="c ${cls}" data-d="${k}" title="${esc(fmtLong(d))}"></span>`;
+    }
+    sc.innerHTML = `<div class="strip" style="--cs:${cs}px">${cells}</div>`;
+    sc.scrollLeft = 0;
+  }
+
   let renderedDay = '';
   function updateSummary() {
     const t = today();
@@ -928,7 +1097,8 @@
     const list = $('#list');
     const has = state.habits.length > 0;
     $('#empty').hidden = has;
-    $('#legend').hidden = !has;
+    $('#toolbar').hidden = !has;
+    syncViewToggle();
     list.innerHTML = state.habits.map(cardHTML).join('');
     $$('.card', list).forEach(el => drawHeatmap(el, byId(el.dataset.id)));
     updateSummary();
@@ -1531,14 +1701,109 @@
     toast('Habit deleted');
   });
 
-  /* ---------- Data dialog ---------- */
-  const dataDlg = $('#dataDlg');
-  const openData = () => { closePop(); dataDlg.showModal(); };
-  $('#dataBtn').addEventListener('click', openData);
-  $('#footData').addEventListener('click', openData);
+  /* ---------- Settings ---------- */
+  const setDlg = $('#setDlg');
+  function openSettings(toData) {
+    closePop();
+    syncSettingsUI();
+    setDlg.showModal();
+    if (toData) $('#dataSec').scrollIntoView({ block: 'start' });
+  }
+  $('#setBtn').addEventListener('click', () => openSettings(false));
+  $('#footData').addEventListener('click', () => openSettings(true));
+
+  const VIEW_ICON = {
+    full: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg>',
+    cards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="13" y="13" width="8" height="7" rx="1.5"/></svg>',
+    compact: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
+  };
+  $('#viewToggle').innerHTML = VIEWS.map(([id, name]) => `<button type="button" data-view="${id}" title="${name} view" aria-label="${name} view">${VIEW_ICON[id]}</button>`).join('');
+  $('#viewOpts').innerHTML = VIEWS.map(([id, name, desc]) => `<button type="button" class="view-opt" data-view="${id}">${VIEW_ICON[id]}<div><b>${name}</b><span>${desc}</span></div></button>`).join('');
+
+  function syncViewToggle() {
+    $$('#viewToggle [data-view], #viewOpts [data-view]').forEach(b => {
+      const on = b.dataset.view === settings.view;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+  }
+  function setView(v) {
+    if (settings.view === v) return;
+    settings.view = v;
+    saveSettings();
+    applyTheme();
+    render();
+  }
+  $('#viewToggle').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) setView(b.dataset.view); });
+  $('#viewOpts').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) setView(b.dataset.view); });
+
+  // Accent swatches: "A" (theme default) + presets + custom pen bubble.
+  $('#accentSw').innerHTML =
+    `<label title="Theme default" class="auto-sw"><input type="radio" name="accent" value="" aria-label="Theme default accent"><span style="--sw:var(--theme-accent)">A</span></label>` +
+    COLORS.map((c, i) => `<label title="${c}"><input type="radio" name="accent" value="${c}" aria-label="Accent ${i + 1}"><span style="--sw:${c}"></span></label>`).join('') +
+    `<div class="custom-sw" id="accCustomSw" title="Custom accent"><span class="sw-face">${ICON.pen}</span><input type="color" id="accCustomColor" value="#7c5cff" aria-label="Custom accent color"></div>`;
+  const accCustomSw = $('#accCustomSw'), accCustomColor = $('#accCustomColor'), accentHex = $('#accentHex');
+
+  function setAccent(v) {
+    settings.accent = v;
+    saveSettings();
+    applyTheme();
+    syncSettingsUI(true);
+  }
+  $$('input[name="accent"]').forEach(r => r.addEventListener('change', () => setAccent(r.value || null)));
+  accCustomColor.addEventListener('input', () => setAccent(accCustomColor.value.toLowerCase()));
+  accCustomColor.addEventListener('change', () => setAccent(accCustomColor.value.toLowerCase()));
+  accentHex.addEventListener('input', () => { const v = normHex(accentHex.value); if (v) { settings.accent = v; saveSettings(); applyTheme(); syncSettingsUI(true); } });
+  accentHex.addEventListener('blur', () => syncSettingsUI());
+  accentHex.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); accentHex.blur(); } });
+
+  $$('input[name="mode"]').forEach(r => r.addEventListener('change', () => {
+    settings.mode = r.value;
+    saveSettings();
+    applyTheme();
+    syncSettingsUI();
+  }));
+  $('#themeGrid').addEventListener('click', e => {
+    const b = e.target.closest('[data-theme]');
+    if (!b) return;
+    settings.theme = b.dataset.theme;
+    saveSettings();
+    applyTheme();
+    syncSettingsUI();
+  });
+
+  function syncSettingsUI(keepHex) {
+    const mode = resolvedMode(), pal = palette(settings.theme, mode);
+    $$('input[name="mode"]').forEach(r => { r.checked = r.value === settings.mode; });
+    $('#themeGrid').innerHTML = Object.entries(THEMES).map(([id, th]) => {
+      const p = th[mode];
+      const cells = [0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1].map(a => `<i class="${a ? 'a' : ''}"></i>`).join('');
+      return `<button type="button" class="theme-tile ${settings.theme === id ? 'on' : ''}" data-theme="${id}" aria-pressed="${settings.theme === id}"
+        style="--tb:${p.bg};--ts:${p.surface};--tc:${p.cell};--ta:${p.accent}">
+        <span class="tp"><span class="tp-card">${cells}</span></span>
+        <span class="tn">${th.name}<em></em></span></button>`;
+    }).join('');
+    $('#accentSw').style.setProperty('--theme-accent', pal.accent);
+    const acc = settings.accent;
+    const preset = acc && COLORS.includes(acc);
+    $$('input[name="accent"]').forEach(r => { r.checked = acc ? r.value === acc : r.value === ''; });
+    accCustomSw.classList.toggle('sel', !!acc && !preset);
+    if (acc && !preset) {
+      accCustomSw.classList.add('has');
+      accCustomSw.style.setProperty('--sw', acc);
+      if (accCustomColor.value.toLowerCase() !== acc) accCustomColor.value = acc;
+    }
+    if (!keepHex) accentHex.value = acc || pal.accent;
+    syncViewToggle();
+  }
+  darkMQ.addEventListener('change', () => {
+    if (settings.mode !== 'system') return;
+    applyTheme();
+    if (setDlg.open) syncSettingsUI();
+  });
 
   $('#exportBtn').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify({ app: 'habit-heatmaps', version: 1, exported: new Date().toISOString(), habits: state.habits }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ app: 'habit-heatmaps', version: 1, exported: new Date().toISOString(), habits: state.habits, settings }, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `habits-${key(today())}.json`;
@@ -1562,7 +1827,8 @@
       if (!confirm(msg)) return;
       state = { habits: habits.map(normalize) };
       save();
-      dataDlg.close();
+      if (data && data.settings) { settings = normSettings(data.settings); saveSettings(); applyTheme(); }
+      setDlg.close();
       render();
       toast('Backup imported');
     } catch (err) {
@@ -1588,7 +1854,7 @@
 
   /* ---------- Static bits & lifecycle ---------- */
   $('#addBtn').innerHTML = ICON.plus + '<span class="btn-label">New habit</span>';
-  $('#dataBtn').innerHTML = ICON.data;
+  $('#setBtn').innerHTML = ICON.sliders;
   $$('[data-close].icon-btn').forEach(b => { b.innerHTML = ICON.close; });
   $('#addBtn').addEventListener('click', () => openDialog(null));
   $('#emptyAdd').addEventListener('click', () => openDialog(null));
@@ -1610,11 +1876,13 @@
   });
   window.addEventListener('storage', e => {
     if (e.key === STORE) { state = load(); render(); }
+    if (e.key === SETTINGS_KEY) { settings = loadSettings(); applyTheme(); render(); }
   });
 
   // Ask the browser not to evict our data (helps on mobile).
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
+  applyTheme();
   render();
 })();
 </script>

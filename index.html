@@ -95,7 +95,7 @@
   .card-head { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: start; }
   .emoji {
     width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
-    font-size: 21px; font-weight: 700; color: var(--c);
+    font-size: 21px; font-weight: 700; color: color-mix(in srgb, var(--c) 80%, var(--text));
     background: color-mix(in srgb, var(--c) 18%, transparent);
   }
   .titles h2 { font-size: 16px; margin: 0; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -115,7 +115,7 @@
   .act:active { transform: scale(.9); }
   .act.check { width: 44px; height: 44px; border-radius: 14px; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
   .act.check svg { width: 22px; height: 22px; }
-  .act.check.on { background: var(--c); color: #fff; }
+  .act.check.on { background: var(--c); color: var(--on, #fff); }
   .act.check.not-due:not(.on) { opacity: .5; }
   .act.skip svg { width: 18px; height: 18px; }
   .act.skip.on { background: var(--skip); color: var(--bg); }
@@ -144,7 +144,9 @@
   .c.skip, .legend i.skip {
     background: repeating-linear-gradient(135deg, var(--skip) 0 2px, transparent 2px 4px), var(--cell-off);
   }
-  .c.fut { background: var(--cell-off); opacity: .35; }
+  .c.pre { background: var(--cell-off); }
+  .c.fut { background: var(--cell); opacity: .3; }
+  .c.fut.nd { background: var(--cell-off); }
   .c.today { box-shadow: inset 0 0 0 1.5px var(--text); }
   .c.sel { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--c); }
 
@@ -162,7 +164,7 @@
     padding: 7px 12px; font-size: 14px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center;
   }
   .pop-btns svg { width: 16px; height: 16px; }
-  .pop-btns button.on[data-s="done"] { background: var(--c); color: #fff; border-color: transparent; }
+  .pop-btns button.on[data-s="done"] { background: var(--c); color: var(--on, #fff); border-color: transparent; }
   .pop-btns button.on[data-s="skip"] { background: var(--skip); color: var(--bg); border-color: transparent; }
 
   /* Empty */
@@ -211,11 +213,64 @@
   }
   .swatches input:checked + span { box-shadow: 0 0 0 2px var(--sw); }
   .swatches input:focus-visible + span { outline: 2px solid var(--text); outline-offset: 2px; }
+  .swatches { align-items: center; }
+  .custom-sw { position: relative; width: 30px; height: 30px; }
+  .custom-sw .sw-face {
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+    background: conic-gradient(#ef4444, #f59e0b, #84cc16, #10b981, #06b6d4, #3b82f6, #a855f7, #ec4899, #ef4444);
+    border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--border); color: #fff;
+  }
+  .custom-sw .sw-face svg { width: 13px; height: 13px; filter: drop-shadow(0 0 1.5px rgba(0,0,0,.7)); }
+  .custom-sw.has .sw-face { background: var(--sw); }
+  .custom-sw.sel .sw-face { box-shadow: 0 0 0 2px var(--sw, var(--text)); }
+  .custom-sw input {
+    position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+    border: 0; padding: 0; margin: 0; pointer-events: auto; -webkit-appearance: none; appearance: none;
+  }
+  .custom-sw:focus-within .sw-face { outline: 2px solid var(--text); outline-offset: 2px; }
+  .hex-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .hex-row .input { width: 116px; padding: 7px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; }
+
+  /* Emoji picker */
+  .icon-pick {
+    width: 64px; height: 44px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2);
+    font-size: 22px; display: grid; place-items: center; padding: 0; color: var(--muted); line-height: 1;
+  }
+  .icon-pick svg { width: 22px; height: 22px; }
+  .icon-pick.open { border-color: var(--accent); }
+  .emoji-panel {
+    border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2);
+    padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-top: -6px;
+  }
+  .emoji-panel .input { background: var(--surface); padding: 8px 10px; }
+  .emoji-panel .btn { padding: 7px 10px; font-size: 13px; }
+  .emoji-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 2px;
+    max-height: 216px; overflow-y: auto; overscroll-behavior: contain;
+  }
+  .emoji-grid h4 {
+    grid-column: 1 / -1; margin: 6px 2px 2px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--muted); font-weight: 600;
+  }
+  .emoji-grid button { border: 0; background: none; font-size: 22px; height: 38px; border-radius: 8px; padding: 0; line-height: 1; }
+  .emoji-grid button:hover, .emoji-grid button:focus-visible { background: var(--surface); outline: none; }
+  .emoji-grid .none-found { grid-column: 1 / -1; color: var(--muted); font-size: 13px; padding: 8px 2px; }
+
+  .wd-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .wd-presets button {
+    border: 1px solid var(--border); background: none; color: var(--muted); border-radius: 999px;
+    padding: 4px 10px; font-size: 12px; font-weight: 600;
+  }
 
   .seg { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 3px; }
   .seg label { position: relative; cursor: pointer; }
   .seg input { position: absolute; opacity: 0; pointer-events: none; }
-  .seg span { display: block; text-align: center; padding: 8px 2px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  .seg label { display: block; }
+  .seg span {
+    display: flex; align-items: center; justify-content: center; height: 100%; min-height: 36px;
+    text-align: center; padding: 6px 2px; border-radius: 9px; font-size: 14px; font-weight: 600;
+    color: var(--muted); line-height: 1.2;
+  }
   .seg input:checked + span { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
   .seg input:focus-visible + span { outline: 2px solid var(--accent); }
   .freq-opt { margin-top: 12px; }
@@ -277,7 +332,7 @@
     <span><i class="skip"></i>Skipped</span>
     <span><i style="background:var(--cell)"></i>Missed / open</span>
     <span><i style="background:var(--cell-off)"></i>Not scheduled</span>
-    <span class="swipe-hint">← Swipe a heatmap for older days</span>
+    <span class="swipe-hint">Swipe a heatmap sideways to see more days</span>
   </div>
 
   <main class="list" id="list"></main>
@@ -312,14 +367,22 @@
     </div>
 
     <div class="row">
-      <label class="field">
+      <div class="field">
         <span class="label">Icon</span>
-        <input class="input emoji-in" id="fEmoji" placeholder="🏃" autocomplete="off">
-      </label>
+        <button type="button" class="icon-pick" id="iconBtn" aria-label="Choose icon" aria-expanded="false"></button>
+      </div>
       <label class="field grow">
         <span class="label">Title</span>
         <input class="input" id="fTitle" maxlength="60" placeholder="e.g. Morning run" autocomplete="off" required>
       </label>
+    </div>
+
+    <div class="emoji-panel" id="emojiPanel" hidden>
+      <div class="row" style="align-items:center">
+        <input class="input grow" id="emojiSearch" placeholder="Search, or paste any emoji" autocomplete="off" aria-label="Search emoji">
+        <button type="button" class="btn" id="emojiNone">No icon</button>
+      </div>
+      <div class="emoji-grid" id="emojiGrid"></div>
     </div>
 
     <label class="field">
@@ -330,13 +393,17 @@
     <fieldset class="field">
       <legend>Color</legend>
       <div class="swatches" id="swatches"></div>
+      <div class="hex-row">
+        <input class="input" id="fHex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Hex color" placeholder="#7c5cff">
+        <span class="hint">Pick a bubble, tap the pen for any color, or type a hex code.</span>
+      </div>
     </fieldset>
 
     <fieldset class="field">
       <legend>How often?</legend>
       <div class="seg">
         <label><input type="radio" name="freq" value="daily" checked><span>Daily</span></label>
-        <label><input type="radio" name="freq" value="weekly"><span>Weekly</span></label>
+        <label><input type="radio" name="freq" value="weekly"><span>Days of week</span></label>
         <label><input type="radio" name="freq" value="monthly"><span>Monthly</span></label>
         <label><input type="radio" name="freq" value="dates"><span>On dates</span></label>
       </div>
@@ -346,7 +413,13 @@
       </div>
       <div class="freq-opt" data-for="weekly" hidden>
         <div class="chips wd" id="wdChips"></div>
-        <p class="hint" style="margin-top:8px">Pick the days of the week this habit is scheduled.</p>
+        <div class="wd-presets">
+          <button type="button" data-preset="0,1,2,3,4">Mon–Fri</button>
+          <button type="button" data-preset="5,6">Weekends</button>
+          <button type="button" data-preset="0,1,2,3,4,5,6">All</button>
+          <button type="button" data-preset="">Clear</button>
+        </div>
+        <p class="hint" style="margin-top:8px">Tap every day this habit is scheduled — pick as many as you like.</p>
       </div>
       <div class="freq-opt" data-for="monthly" hidden>
         <div class="inline">On day <input class="input" id="fDom" type="number" min="1" max="31" inputmode="numeric"> of every month</div>
@@ -360,6 +433,12 @@
         <div class="chips date-list" id="dateList"></div>
       </div>
     </fieldset>
+
+    <label class="field">
+      <span class="label">Start tracking on</span>
+      <input class="input" type="date" id="fStart">
+      <span class="hint">This is the first square in the top-left of the heatmap. Pick an earlier date to fill in past days.</span>
+    </label>
 
     <div class="dlg-foot">
       <button type="button" class="btn danger" id="delBtn">Delete</button>
@@ -404,8 +483,22 @@
     more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>',
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-    data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>'
+    data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
+    pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>',
+    smile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/></svg>'
   };
+
+  // Curated emoji set: "emoji keywords" separated by "|".
+  const EMOJI = [
+    ['Fitness', '🏃 run running jog|🚶 walk steps|🏋️ gym weights lift workout|💪 strength muscle workout|🧘 yoga meditate stretch|🤸 stretch mobility|🚴 bike cycle cycling|🏊 swim swimming|🥾 hike hiking|🧗 climb bouldering|⚽ football soccer|🏀 basketball|🎾 tennis|🏓 table tennis ping pong|🥊 boxing|🛹 skate|⛷️ ski|🏄 surf|🤾 sport handball|🚣 row rowing'],
+    ['Health', '💧 water drink hydrate|💊 pill vitamin medicine supplement|🦷 teeth floss brush dentist|😴 sleep tired|🛌 bed rest sleep|🧴 skincare lotion sunscreen|🚿 shower cold|🛁 bath|🩺 doctor health checkup|❤️ heart cardio love|🫁 breathe breathing lungs|🚭 no smoking quit|🍎 apple fruit|🥗 salad healthy eat|🥦 vegetables broccoli greens|🍳 cook breakfast|☕ coffee|🍵 tea|🍷 alcohol wine drink|🍬 sugar candy sweets|🚫 no stop avoid quit|⚖️ weight scale'],
+    ['Mind', '🧠 brain think learn|🙏 gratitude pray thanks|📓 journal notebook diary|✍️ write writing|🌅 morning sunrise routine|🌙 night evening routine|😊 smile happy mood|🧩 puzzle|♟️ chess|📵 no phone screen time|🕯️ calm candle relax|🌬️ breathe breath air|🫶 kindness self care love|🤔 reflect think'],
+    ['Learning', '📚 read books reading|📖 book read|🎓 study school learn university|🗣️ language speak talk|🎹 piano music practice|🎸 guitar music|🥁 drums music|🎨 paint art draw|✏️ pencil draw sketch|📷 photo camera photography|💻 code computer laptop programming|🔬 science research|🧮 math|🌍 world language travel|🎧 podcast listen music audiobook|🎤 sing voice'],
+    ['Work & money', '💼 work job|📧 email inbox mail|✅ done task todo check|📅 calendar plan schedule|🎯 goal target focus|⏰ alarm wake up early time|⏱️ timer pomodoro focus|💰 money save savings|💸 spend budget expense|📈 invest growth stocks|🧾 bills receipt|🏦 bank finance|📞 call phone|📝 notes memo plan'],
+    ['Home', '🧹 clean sweep tidy|🧺 laundry wash|🍽️ dishes|🪴 plant water garden|🌱 grow sprout garden|🐕 dog walk pet|🐈 cat pet|🛒 groceries shopping|🗑️ trash garbage|🛏️ make bed|🧽 scrub clean|🔧 fix repair diy|👶 baby kid child'],
+    ['Social & fun', '👨‍👩‍👧 family|💬 message friend chat text|🤝 meet network friends|📱 phone call family|🎮 game play gaming|🎬 movie film|🌳 nature tree outside|☀️ sun outside daylight|🌊 sea ocean beach|🎉 party celebrate|🎁 gift|🚗 car drive|✈️ travel flight trip'],
+    ['Symbols', '⭐ star|🔥 fire streak|⚡ energy|💎 diamond|🏆 trophy win|🚀 rocket launch|🍀 luck clover|🌈 rainbow|💜 purple heart|💙 blue heart|💚 green heart|🧡 orange heart|🔔 bell reminder|📌 pin|🔑 key']
+  ].map(([cat, s]) => [cat, s.split('|').map(x => { const i = x.indexOf(' '); return [x.slice(0, i), x.slice(i + 1)]; })]);
 
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -422,7 +515,13 @@
   const ord = n => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
 
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  // Readable foreground (check mark etc.) on top of a habit color.
+  const onColor = hex => {
+    const n = parseInt(hex.slice(1), 16);
+    const lum = (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255;
+    return lum > 0.62 ? '#111318' : '#ffffff';
+  };
+  const uid = () =>(crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
 
   /* ---------- Storage ---------- */
   function normalize(h) {
@@ -543,7 +642,7 @@
   function cardHTML(h) {
     const t = today(), tk = key(t), st = h.log[tk], due = isDue(h, t), s = stats(h);
     const icon = h.emoji ? esc(h.emoji) : esc(([...h.title.trim()][0] || '?').toUpperCase());
-    return `<article class="card" data-id="${esc(h.id)}" style="--c:${h.color}">
+    return `<article class="card" data-id="${esc(h.id)}" style="--c:${h.color};--on:${onColor(h.color)}">
       <div class="card-head">
         <div class="emoji" aria-hidden="true">${icon}</div>
         <div class="titles">
@@ -568,25 +667,42 @@
   function drawHeatmap(card, h, scroll) {
     const sc = $('.hm-scroll', card);
     const w = sc.clientWidth || 600;
+    // Cell size is based on fitting one year (53 weeks) into the card width.
     const cs = Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor((w - GAP * (WEEKS - 1)) / WEEKS * 10) / 10));
     const t = today(), tk = key(t);
-    const start = addDays(t, -((t.getDay() + 6) % 7) - (WEEKS - 1) * 7);
-    let cells = '', months = '';
-    for (let c = 0; c < WEEKS; c++) {
+    // The grid starts in the top-left corner on the habit's first day and fills forward in time
+    // (down each column, then to the next column — every column is 7 consecutive days).
+    const s0 = startOf(h), sk = key(s0);
+    const start = s0;
+    const todayCol = Math.floor(Math.round((t - start) / 864e5) / 7);
+    const cols = Math.max(WEEKS, todayCol + 1);
+    const labels = [];
+    let cells = '';
+    for (let c = 0; c < cols; c++) {
       for (let r = 0; r < 7; r++) {
         const d = addDays(start, c * 7 + r), k = key(d);
-        if (d.getDate() === 1 && c > 0) {
-          months += `<span style="grid-column:${c + 1}">${d.toLocaleDateString(LOC, { month: 'short' })}</span>`;
+        if ((c === 0 && r === 0) || (d.getDate() === 1 && c > 0)) {
+          const m = d.getMonth() === 0 && c > 0 ? `Jan ’${String(d.getFullYear()).slice(2)}` : d.toLocaleDateString(LOC, { month: 'short' });
+          labels.push({ c, m });
         }
-        if (k > tk) { cells += '<span class="c fut"></span>'; continue; }
+        if (k > tk) { cells += `<span class="c fut${isDue(h, d) ? '' : ' nd'}"></span>`; continue; }
         const s = h.log[k];
-        let cls = s === 'done' ? 'done' : s === 'skip' ? 'skip' : isDue(h, d) ? 'due' : 'off';
+        let cls = s === 'done' ? 'done' : s === 'skip' ? 'skip' : k < sk ? 'pre' : isDue(h, d) ? 'due' : 'off';
         if (k === tk) cls += ' today';
         cells += `<span class="c ${cls}" data-d="${k}"></span>`;
       }
     }
-    sc.innerHTML = `<div class="hm" style="--cs:${cs}px;--w:${WEEKS}"><div class="hm-months">${months}</div><div class="hm-grid">${cells}</div></div>`;
-    sc.scrollLeft = scroll == null ? sc.scrollWidth : scroll;
+    // Drop the first-column label if the next month label would collide with it.
+    if (labels.length > 1 && labels[1].c - labels[0].c < 3) labels.shift();
+    const months = labels.map(l => `<span style="grid-column:${l.c + 1}">${l.m}</span>`).join('');
+    sc.innerHTML = `<div class="hm" style="--cs:${cs}px;--w:${cols}"><div class="hm-months">${months}</div><div class="hm-grid">${cells}</div></div>`;
+    if (scroll != null) {
+      sc.scrollLeft = scroll;
+    } else {
+      // Show from the start; only scroll if today would be off-screen.
+      const colPx = cs + GAP;
+      sc.scrollLeft = Math.max(0, (todayCol + 3) * colPx - w);
+    }
   }
 
   let renderedDay = '';
@@ -653,6 +769,7 @@
     $('.pop-sub', pop).textContent = h.title + (isDue(h, d) ? '' : ' · not scheduled');
     $$('button[data-s]', pop).forEach(b => b.classList.toggle('on', !!b.dataset.s && b.dataset.s === s));
     pop.style.setProperty('--c', h.color);
+    pop.style.setProperty('--on', onColor(h.color));
     pop.hidden = false;
     const r = cell.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
     let x = r.left + r.width / 2 - pw / 2;
@@ -703,10 +820,97 @@
   const dlg = $('#dlg'), form = $('#form');
   let editingId = null, formDates = [];
 
+  let formColor = COLORS[0], formEmoji = '';
+
+  /* Color: preset bubbles + custom "pen" bubble + hex field */
   $('#swatches').innerHTML = COLORS.map((c, i) =>
-    `<label title="${c}"><input type="radio" name="color" value="${c}" ${i === 0 ? 'checked' : ''} aria-label="Color ${i + 1}"><span style="--sw:${c}"></span></label>`).join('');
+    `<label title="${c}"><input type="radio" name="color" value="${c}" ${i === 0 ? 'checked' : ''} aria-label="Color ${i + 1}"><span style="--sw:${c}"></span></label>`).join('') +
+    `<div class="custom-sw" id="customSw" title="Custom color"><span class="sw-face">${ICON.pen}</span><input type="color" id="customColor" value="#7c5cff" aria-label="Custom color"></div>`;
+  const customSw = $('#customSw'), customColor = $('#customColor'), hexIn = $('#fHex');
+
+  function normHex(v) {
+    v = String(v || '').trim().toLowerCase();
+    if (!v.startsWith('#')) v = '#' + v;
+    if (/^#[0-9a-f]{3}$/.test(v)) v = '#' + [...v.slice(1)].map(c => c + c).join('');
+    return /^#[0-9a-f]{6}$/.test(v) ? v : null;
+  }
+  function setFormColor(c, fromHex) {
+    formColor = c;
+    const preset = COLORS.includes(c);
+    $$('input[name="color"]', form).forEach(r => { r.checked = r.value === c; });
+    customSw.classList.toggle('sel', !preset);
+    if (!preset) {
+      customSw.classList.add('has');
+      customSw.style.setProperty('--sw', c);
+      if (customColor.value.toLowerCase() !== c) customColor.value = c;
+    }
+    if (!fromHex) hexIn.value = c;
+  }
+  function resetCustom() {
+    customSw.classList.remove('has', 'sel');
+    customSw.style.removeProperty('--sw');
+    customColor.value = '#7c5cff';
+  }
+  $$('input[name="color"]', form).forEach(r => r.addEventListener('change', () => setFormColor(r.value)));
+  customColor.addEventListener('input', () => setFormColor(customColor.value.toLowerCase()));
+  customColor.addEventListener('change', () => setFormColor(customColor.value.toLowerCase()));
+  customColor.addEventListener('click', () => { if (customSw.classList.contains('has')) setFormColor(customColor.value.toLowerCase()); });
+  hexIn.addEventListener('input', () => { const v = normHex(hexIn.value); if (v) setFormColor(v, true); });
+  hexIn.addEventListener('blur', () => { hexIn.value = formColor; });
+  hexIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); hexIn.blur(); } });
+
+  /* Emoji picker */
+  const iconBtn = $('#iconBtn'), emojiPanel = $('#emojiPanel'), emojiSearch = $('#emojiSearch'), emojiGrid = $('#emojiGrid');
+  function setEmoji(e) {
+    formEmoji = e;
+    iconBtn.innerHTML = e ? esc(e) : ICON.smile;
+  }
+  function renderEmojiGrid(q) {
+    q = (q || '').trim().toLowerCase();
+    const typed = q && /\p{Extended_Pictographic}/u.test(q) ? firstGrapheme(q) : '';
+    let html = typed ? `<h4>Use this</h4><button type="button" data-e="${esc(typed)}">${esc(typed)}</button>` : '';
+    for (const [cat, items] of EMOJI) {
+      const list = q && !typed ? items.filter(([, k]) => k.includes(q) || cat.toLowerCase().includes(q)) : items;
+      if (!list.length) continue;
+      html += `<h4>${esc(cat)}</h4>` + list.map(([e, k]) => `<button type="button" data-e="${e}" title="${esc(k.split(' ')[0])}">${e}</button>`).join('');
+    }
+    emojiGrid.innerHTML = html || '<div class="none-found">No match — you can also paste any emoji into the search box.</div>';
+  }
+  function toggleEmoji(open) {
+    emojiPanel.hidden = !open;
+    iconBtn.classList.toggle('open', open);
+    iconBtn.setAttribute('aria-expanded', String(open));
+    if (open) {
+      emojiSearch.value = '';
+      renderEmojiGrid('');
+      emojiGrid.scrollTop = 0;
+      if (window.matchMedia('(pointer: fine)').matches) emojiSearch.focus();
+    }
+  }
+  iconBtn.addEventListener('click', () => toggleEmoji(emojiPanel.hidden));
+  emojiSearch.addEventListener('input', () => renderEmojiGrid(emojiSearch.value));
+  emojiSearch.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const first = $('button[data-e]', emojiGrid);
+      if (first) { setEmoji(first.dataset.e); toggleEmoji(false); }
+    }
+  });
+  emojiGrid.addEventListener('click', e => {
+    const b = e.target.closest('button[data-e]');
+    if (!b) return;
+    setEmoji(b.dataset.e);
+    toggleEmoji(false);
+  });
+  $('#emojiNone').addEventListener('click', () => { setEmoji(''); toggleEmoji(false); });
+
+  /* Days of week */
   $('#wdChips').innerHTML = WD.map((d, i) =>
     `<label><input type="checkbox" name="wd" value="${i}"><span>${d}</span></label>`).join('');
+  $$('.wd-presets button', form).forEach(b => b.addEventListener('click', () => {
+    const days = b.dataset.preset ? b.dataset.preset.split(',').map(Number) : [];
+    $$('input[name="wd"]', form).forEach(c => { c.checked = days.includes(+c.value); });
+  }));
 
   function showFreq(type) {
     $$('.freq-opt', form).forEach(el => { el.hidden = el.dataset.for !== type; });
@@ -743,10 +947,11 @@
     $('#delBtn').hidden = !h;
     $('#fTitle').value = h ? h.title : '';
     $('#fDesc').value = h ? h.desc : '';
-    $('#fEmoji').value = h ? h.emoji : '';
-    const color = h ? h.color : COLORS[state.habits.length % COLORS.length];
-    $$('input[name="color"]', form).forEach(r => { r.checked = r.value === color; });
-    if (!$('input[name="color"]:checked', form)) $('input[name="color"]', form).checked = true;
+    $('#fStart').value = h ? h.created : key(t);
+    setEmoji(h ? h.emoji : '');
+    toggleEmoji(false);
+    resetCustom();
+    setFormColor(h ? h.color : COLORS[state.habits.length % COLORS.length]);
 
     const f = h ? h.freq : { type: 'daily' };
     $$('input[name="freq"]', form).forEach(r => { r.checked = r.value === f.type; });
@@ -792,17 +997,19 @@
       if (!formDates.length) { toast('Add at least one date'); return; }
       freq.dates = [...formDates].sort();
     }
+    const startVal = $('#fStart').value;
     const data = {
       title,
       desc: $('#fDesc').value.trim(),
-      emoji: firstGrapheme($('#fEmoji').value),
-      color: $('input[name="color"]:checked', form).value,
-      freq
+      emoji: formEmoji,
+      color: normHex(formColor) || COLORS[0],
+      freq,
+      created: isKey(startVal) ? startVal : key(today())
     };
     if (editingId) {
       Object.assign(byId(editingId), data);
     } else {
-      state.habits.push(normalize({ ...data, id: uid(), created: key(today()), log: {} }));
+      state.habits.push(normalize({ ...data, id: uid(), log: {} }));
     }
     save();
     dlg.close();

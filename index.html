@@ -344,6 +344,59 @@
     .view-opt { flex-direction: row; align-items: center; gap: 12px; }
   }
 
+  .tabs.four { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 480px) { .tabs.four button svg { display: none; } .tabs.four button { font-size: 13px; } }
+  #setDlg .det-top .dlg-head h3 { margin: 0; font-size: 18px; }
+  .seg.two { grid-template-columns: repeat(2, 1fr); }
+  .theme-tile .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .theme-tile.add { align-items: center; justify-content: center; min-height: 92px; color: var(--muted); border-style: dashed; background: none; }
+  .theme-tile.add svg { width: 22px; height: 22px; }
+
+  /* Switch */
+  .switch-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: pointer;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px;
+  }
+  .switch-row b { display: block; font-size: 14px; }
+  .switch-row span.d { font-size: 12px; color: var(--muted); }
+  .switch { position: relative; width: 46px; height: 28px; flex-shrink: 0; }
+  .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+  .switch i { position: absolute; inset: 0; border-radius: 999px; background: var(--cell); transition: background .2s; }
+  .switch i::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s;
+  }
+  .switch input:checked + i { background: var(--accent); }
+  .switch input:checked + i::after { transform: translateX(18px); }
+  .switch input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Custom themes */
+  .ct-list { display: flex; flex-direction: column; gap: 8px; }
+  .ct-item {
+    display: flex; align-items: center; gap: 12px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 8px 10px 8px 8px;
+  }
+  .ct-item.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .ct-item .tp { width: 64px; padding: 6px; flex-shrink: 0; }
+  .ct-item .tp-card { grid-template-columns: repeat(4, 1fr); padding: 5px; gap: 2px; }
+  .ct-item .grow { flex: 1; min-width: 0; }
+  .ct-item b { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ct-item small { color: var(--muted); font-size: 12px; }
+  .ct-item .btn { padding: 7px 12px; font-size: 13px; }
+  .ct-item .icon-btn { width: 34px; height: 34px; }
+  .ct-item .icon-btn svg { width: 17px; height: 17px; }
+  .ct-colors { display: flex; flex-direction: column; }
+  .ct-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .ct-row:last-child { border-bottom: 0; }
+  .ct-row .grow { flex: 1; min-width: 0; }
+  .ct-row b { display: block; font-size: 14px; }
+  .ct-row small { color: var(--muted); font-size: 12px; }
+  .ct-sw { position: relative; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--v); flex-shrink: 0; overflow: hidden; }
+  .ct-sw input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; margin: 0; }
+  .ct-hex { width: 100px !important; padding: 7px 9px !important; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+  select.input { appearance: auto; }
+  .imp-warn { color: var(--danger); font-size: 13px; margin: 0; }
+
   /* Empty */
   .empty { text-align: center; padding: 56px 16px; }
   .empty h2 { margin: 18px 0 6px; font-size: 20px; }
@@ -641,50 +694,82 @@
 
 <!-- Settings dialog -->
 <dialog id="setDlg" class="wide" aria-label="Settings">
-  <div class="dlg-body">
+  <div class="det-top">
     <div class="dlg-head">
       <h3>Settings</h3>
       <button type="button" class="icon-btn" data-close aria-label="Close"></button>
     </div>
+    <div class="tabs four" id="setTabs" role="tablist"></div>
+  </div>
 
-    <section class="set-sec" style="border-top:0;padding-top:0">
-      <h4 class="set-h">Appearance</h4>
-      <fieldset class="field">
-        <legend>Mode</legend>
-        <div class="seg three" id="modeSeg">
-          <label><input type="radio" name="mode" value="system"><span>System</span></label>
-          <label><input type="radio" name="mode" value="light"><span>Light</span></label>
-          <label><input type="radio" name="mode" value="dark"><span>Dark</span></label>
-        </div>
-      </fieldset>
-      <fieldset class="field">
-        <legend>Theme</legend>
-        <div class="themes" id="themeGrid"></div>
-      </fieldset>
-      <fieldset class="field">
-        <legend>Accent color</legend>
-        <div class="swatches" id="accentSw"></div>
-        <div class="hex-row">
-          <input class="input" id="accentHex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Accent hex color">
-          <span class="hint">Used for buttons and highlights. “A” follows the theme’s own accent.</span>
-        </div>
-      </fieldset>
-    </section>
-
-    <section class="set-sec">
-      <h4 class="set-h">Habit view</h4>
-      <div class="view-opts" id="viewOpts"></div>
-    </section>
-
-    <section class="set-sec" id="dataSec">
-      <h4 class="set-h">Backup &amp; restore</h4>
-      <p class="hint" style="font-size:14px">Your habits and settings are stored in this browser on this device. Export a backup file to keep them safe or move them to another phone or computer.</p>
-      <div class="row" style="flex-wrap:wrap">
-        <button class="btn" id="exportBtn">Export backup</button>
-        <button class="btn" id="importBtn">Import backup</button>
-        <input type="file" id="importFile" accept="application/json,.json" hidden>
+  <div class="det-pane" data-spane="look">
+    <fieldset class="field">
+      <legend>Mode</legend>
+      <div class="seg three" id="modeSeg">
+        <label><input type="radio" name="mode" value="system"><span>System</span></label>
+        <label><input type="radio" name="mode" value="light"><span>Light</span></label>
+        <label><input type="radio" name="mode" value="dark"><span>Dark</span></label>
       </div>
-    </section>
+    </fieldset>
+    <fieldset class="field">
+      <legend>Theme</legend>
+      <div class="themes" id="themeGrid"></div>
+    </fieldset>
+    <fieldset class="field">
+      <legend>Accent color</legend>
+      <div class="swatches" id="accentSw"></div>
+      <div class="hex-row">
+        <input class="input" id="accentHex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Accent hex color">
+        <span class="hint">Used for buttons and highlights. “A” follows the theme’s own accent.</span>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="det-pane" data-spane="themes" id="themesPane" hidden></div>
+
+  <div class="det-pane" data-spane="layout" hidden>
+    <fieldset class="field">
+      <legend>Habit view</legend>
+      <div class="view-opts" id="viewOpts"></div>
+    </fieldset>
+    <fieldset class="field">
+      <legend>Overview</legend>
+      <label class="switch-row">
+        <div><b>Streak banner</b><span class="d">The big overall streak at the top of the page. Each habit keeps its own streak either way.</span></div>
+        <span class="switch"><input type="checkbox" id="showStreak"><i></i></span>
+      </label>
+    </fieldset>
+  </div>
+
+  <div class="det-pane" data-spane="data" hidden>
+    <p class="hint" style="font-size:14px">Your habits, settings and custom themes are stored in this browser on this device. Export a backup file to keep them safe or move them to another phone or computer.</p>
+    <div class="row" style="flex-wrap:wrap">
+      <button class="btn" id="exportBtn">Export backup</button>
+      <button class="btn" id="importBtn">Import backup…</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+    <p class="hint">When importing you can choose to bring in only the habit data and keep your current settings.</p>
+  </div>
+</dialog>
+
+<!-- Import dialog -->
+<dialog id="impDlg" aria-label="Import backup">
+  <div class="dlg-body">
+    <div class="dlg-head">
+      <h3>Import backup</h3>
+      <button type="button" class="icon-btn" data-close aria-label="Close"></button>
+    </div>
+    <p class="hint" style="font-size:14px" id="impInfo"></p>
+    <label class="switch-row" id="impSetRow">
+      <div><b>Ignore settings</b><span class="d">Only import habit data. Your current theme, view, accent and custom themes stay as they are.</span></div>
+      <span class="switch"><input type="checkbox" id="impIgnore"><i></i></span>
+    </label>
+    <p class="imp-warn" id="impWarn"></p>
+    <div class="dlg-foot">
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="button" class="btn primary" id="impGo">Import</button>
+    </div>
   </div>
 </dialog>
 
@@ -725,13 +810,40 @@
     ['compact', 'Compact', 'One line of recent days per habit.']
   ];
 
+  const PAL_KEYS = [
+    ['bg', 'Background', 'Page background'],
+    ['surface', 'Cards', 'Habit cards and windows'],
+    ['surface-2', 'Raised', 'Buttons, tiles and inputs'],
+    ['border', 'Borders', 'Outlines and dividers'],
+    ['text', 'Text', 'Main text'],
+    ['muted', 'Secondary text', 'Labels and hints'],
+    ['cell', 'Empty squares', 'Open or missed days'],
+    ['cell-off', 'Off squares', 'Days not scheduled'],
+    ['skip', 'Skipped', 'Skip stripes'],
+    ['accent', 'Accent', 'Buttons and highlights'],
+    ['danger', 'Fails', 'Missed days and delete']
+  ];
+  const isHexColor = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+  function normPal(p, mode) {
+    const base = THEMES.default[mode], out = {};
+    for (const [k] of PAL_KEYS) out[k] = p && isHexColor(p[k]) ? p[k].toLowerCase() : base[k];
+    return out;
+  }
   function normSettings(s) {
     s = s || {};
+    const customThemes = (Array.isArray(s.customThemes) ? s.customThemes : []).filter(t => t && typeof t === 'object').slice(0, 40).map(t => ({
+      id: typeof t.id === 'string' && /^c_[a-z0-9]{1,24}$/.test(t.id) ? t.id : 'c_' + Math.random().toString(36).slice(2, 10),
+      name: String(t.name || 'Custom').slice(0, 30),
+      dark: normPal(t.dark, 'dark'),
+      light: normPal(t.light, 'light')
+    }));
     return {
       mode: ['system', 'light', 'dark'].includes(s.mode) ? s.mode : 'system',
-      theme: THEMES[s.theme] ? s.theme : 'default',
-      accent: /^#[0-9a-f]{6}$/i.test(s.accent) ? s.accent.toLowerCase() : null,
-      view: VIEWS.some(v => v[0] === s.view) ? s.view : 'full'
+      theme: THEMES[s.theme] || customThemes.some(t => t.id === s.theme) ? s.theme : 'default',
+      accent: isHexColor(s.accent) ? s.accent.toLowerCase() : null,
+      view: VIEWS.some(v => v[0] === s.view) ? s.view : 'full',
+      showStreak: s.showStreak !== false,
+      customThemes
     };
   }
   function loadSettings() {
@@ -743,12 +855,22 @@
   let settings = loadSettings();
   const darkMQ = window.matchMedia('(prefers-color-scheme: dark)');
   const resolvedMode = () => settings.mode === 'system' ? (darkMQ.matches ? 'dark' : 'light') : settings.mode;
-  const palette = (theme, mode) => (THEMES[theme] || THEMES.default)[mode];
+  function allThemes() {
+    const o = { ...THEMES };
+    for (const t of settings.customThemes) o[t.id] = { name: t.name, dark: t.dark, light: t.light, custom: true };
+    return o;
+  }
+  const palette = (theme, mode) => (allThemes()[theme] || THEMES.default)[mode];
+
+  // While the theme editor is open, the palette being edited is previewed live.
+  let preview = null; // { pal, mode }
 
   function applyTheme() {
-    const mode = resolvedMode(), pal = palette(settings.theme, mode), root = document.documentElement;
+    const mode = preview ? preview.mode : resolvedMode();
+    const pal = preview ? preview.pal : palette(settings.theme, mode);
+    const root = document.documentElement;
     for (const [k, v] of Object.entries(pal)) root.style.setProperty('--' + k, v);
-    const accent = settings.accent || pal.accent;
+    const accent = preview ? pal.accent : (settings.accent || pal.accent);
     root.style.setProperty('--accent', accent);
     root.style.setProperty('--accent-on', onColor(accent));
     root.style.setProperty('--shadow', mode === 'dark' ? '0 1px 2px rgba(0,0,0,.3)' : '0 1px 3px rgba(16,24,40,.07)');
@@ -772,6 +894,9 @@
     pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>',
     chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
     chevL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+    contrast: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>',
+    palette: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.2 0 1.8-.8 1.8-1.7 0-1.2-1-1.6-1-2.6 0-1 .8-1.7 1.9-1.7H17a3.5 3.5 0 0 0 3.5-3.5c0-4.2-3.8-7.5-8.5-7.5z"/><circle cx="7.8" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="10.6" cy="7.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="7.6" r="1.2" fill="currentColor" stroke="none"/></svg>',
     sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>',
     hash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 9h14M5 15h14M10 4L8 20M16 4l-2 16"/></svg>',
     flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.8 3.4 5 5.6 5 10.2A5 5 0 0 1 7 13.5c0-2.1 1-3.6 2.1-4.6.2 1.7 1 2.7 2 2.8-.2-3 .2-5.8.9-8.7z"/></svg>',
@@ -951,8 +1076,8 @@
   function renderStreak() {
     const el = $('#streak');
     const o = overall();
-    el.hidden = !o;
-    if (!o) return;
+    el.hidden = !o || !settings.showStreak;
+    if (!o || !settings.showStreak) return;
     const plural = n => `${n} day${n === 1 ? '' : 's'}`;
     let sub;
     if (o.todayState === 'pending') sub = o.current ? `Finish today’s habits to make it ${plural(o.current + 1)}` : 'Finish today’s habits to start one';
@@ -1703,20 +1828,36 @@
 
   /* ---------- Settings ---------- */
   const setDlg = $('#setDlg');
-  function openSettings(toData) {
-    closePop();
-    syncSettingsUI();
-    setDlg.showModal();
-    if (toData) $('#dataSec').scrollIntoView({ block: 'start' });
-  }
-  $('#setBtn').addEventListener('click', () => openSettings(false));
-  $('#footData').addEventListener('click', () => openSettings(true));
-
+  let setTab = 'look';
   const VIEW_ICON = {
     full: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg>',
     cards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="13" y="13" width="8" height="7" rx="1.5"/></svg>',
     compact: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
   };
+  const SET_TABS = [['look', ICON.contrast, 'Appearance'], ['themes', ICON.palette, 'Themes'], ['layout', VIEW_ICON.cards, 'Layout'], ['data', ICON.data, 'Backup']];
+
+  function openSettings(tab) {
+    closePop();
+    if (!setDlg.open) setDlg.showModal();
+    showSTab(tab || 'look');
+  }
+  function showSTab(tab) {
+    setTab = tab;
+    $('#setTabs').innerHTML = SET_TABS.map(([id, ic, label]) =>
+      `<button type="button" role="tab" data-stab="${id}" aria-selected="${id === tab}" class="${id === tab ? 'on' : ''}">${ic}${label}</button>`).join('');
+    $$('[data-spane]', setDlg).forEach(p => { p.hidden = p.dataset.spane !== tab; });
+    // Only preview a theme being edited while the Themes tab is visible.
+    preview = tab === 'themes' && ctDraft ? { pal: ctDraft[ctMode], mode: ctMode } : null;
+    applyTheme();
+    if (tab === 'themes') renderThemesPane();
+    syncSettingsUI();
+    setDlg.scrollTop = 0;
+  }
+  $('#setTabs').addEventListener('click', e => { const b = e.target.closest('[data-stab]'); if (b && b.dataset.stab !== setTab) showSTab(b.dataset.stab); });
+  setDlg.addEventListener('close', () => { ctDraft = null; preview = null; applyTheme(); });
+  $('#setBtn').addEventListener('click', () => openSettings('look'));
+  $('#footData').addEventListener('click', () => openSettings('data'));
+
   $('#viewToggle').innerHTML = VIEWS.map(([id, name]) => `<button type="button" data-view="${id}" title="${name} view" aria-label="${name} view">${VIEW_ICON[id]}</button>`).join('');
   $('#viewOpts').innerHTML = VIEWS.map(([id, name, desc]) => `<button type="button" class="view-opt" data-view="${id}">${VIEW_ICON[id]}<div><b>${name}</b><span>${desc}</span></div></button>`).join('');
 
@@ -1737,6 +1878,12 @@
   $('#viewToggle').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) setView(b.dataset.view); });
   $('#viewOpts').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) setView(b.dataset.view); });
 
+  $('#showStreak').addEventListener('change', e => {
+    settings.showStreak = e.target.checked;
+    saveSettings();
+    renderStreak();
+  });
+
   // Accent swatches: "A" (theme default) + presets + custom pen bubble.
   $('#accentSw').innerHTML =
     `<label title="Theme default" class="auto-sw"><input type="radio" name="accent" value="" aria-label="Theme default accent"><span style="--sw:var(--theme-accent)">A</span></label>` +
@@ -1753,7 +1900,7 @@
   $$('input[name="accent"]').forEach(r => r.addEventListener('change', () => setAccent(r.value || null)));
   accCustomColor.addEventListener('input', () => setAccent(accCustomColor.value.toLowerCase()));
   accCustomColor.addEventListener('change', () => setAccent(accCustomColor.value.toLowerCase()));
-  accentHex.addEventListener('input', () => { const v = normHex(accentHex.value); if (v) { settings.accent = v; saveSettings(); applyTheme(); syncSettingsUI(true); } });
+  accentHex.addEventListener('input', () => { const v = normHex(accentHex.value); if (v) setAccent(v); });
   accentHex.addEventListener('blur', () => syncSettingsUI());
   accentHex.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); accentHex.blur(); } });
 
@@ -1766,23 +1913,25 @@
   $('#themeGrid').addEventListener('click', e => {
     const b = e.target.closest('[data-theme]');
     if (!b) return;
+    if (b.dataset.theme === '+') { startThemeDraft(settings.theme); showSTab('themes'); return; }
     settings.theme = b.dataset.theme;
     saveSettings();
     applyTheme();
     syncSettingsUI();
   });
 
+  const miniCells = n => [0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1].slice(0, n).map(a => `<i class="${a ? 'a' : ''}"></i>`).join('');
+  const tileVars = p => `--tb:${p.bg};--ts:${p.surface};--tc:${p.cell};--ta:${p.accent}`;
+
   function syncSettingsUI(keepHex) {
     const mode = resolvedMode(), pal = palette(settings.theme, mode);
     $$('input[name="mode"]').forEach(r => { r.checked = r.value === settings.mode; });
-    $('#themeGrid').innerHTML = Object.entries(THEMES).map(([id, th]) => {
+    $('#themeGrid').innerHTML = Object.entries(allThemes()).map(([id, th]) => {
       const p = th[mode];
-      const cells = [0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1].map(a => `<i class="${a ? 'a' : ''}"></i>`).join('');
-      return `<button type="button" class="theme-tile ${settings.theme === id ? 'on' : ''}" data-theme="${id}" aria-pressed="${settings.theme === id}"
-        style="--tb:${p.bg};--ts:${p.surface};--tc:${p.cell};--ta:${p.accent}">
-        <span class="tp"><span class="tp-card">${cells}</span></span>
-        <span class="tn">${th.name}<em></em></span></button>`;
-    }).join('');
+      return `<button type="button" class="theme-tile ${settings.theme === id ? 'on' : ''}" data-theme="${id}" aria-pressed="${settings.theme === id}" style="${tileVars(p)}">
+        <span class="tp"><span class="tp-card">${miniCells(14)}</span></span>
+        <span class="tn"><span>${esc(th.name)}${th.custom ? ' <span class="tag">custom</span>' : ''}</span><em></em></span></button>`;
+    }).join('') + `<button type="button" class="theme-tile add" data-theme="+">${ICON.plus}<span class="tn">Create theme</span></button>`;
     $('#accentSw').style.setProperty('--theme-accent', pal.accent);
     const acc = settings.accent;
     const preset = acc && COLORS.includes(acc);
@@ -1794,6 +1943,7 @@
       if (accCustomColor.value.toLowerCase() !== acc) accCustomColor.value = acc;
     }
     if (!keepHex) accentHex.value = acc || pal.accent;
+    $('#showStreak').checked = settings.showStreak;
     syncViewToggle();
   }
   darkMQ.addEventListener('change', () => {
@@ -1802,8 +1952,145 @@
     if (setDlg.open) syncSettingsUI();
   });
 
+  /* ---------- Custom theme editor ---------- */
+  let ctDraft = null, ctMode = 'dark';
+  const themesPane = $('#themesPane');
+
+  function startThemeDraft(baseId, editId) {
+    const all = allThemes();
+    if (editId) {
+      const t = settings.customThemes.find(x => x.id === editId);
+      if (!t) return;
+      ctDraft = { id: t.id, name: t.name, dark: { ...t.dark }, light: { ...t.light } };
+    } else {
+      const base = all[baseId] || THEMES.default;
+      ctDraft = { id: null, name: `My ${base.name}`.slice(0, 30), dark: { ...base.dark }, light: { ...base.light } };
+    }
+    ctMode = resolvedMode();
+  }
+  function stopThemeDraft() {
+    ctDraft = null;
+    preview = null;
+    applyTheme();
+    renderThemesPane();
+  }
+
+  function renderThemesPane() {
+    const mode = resolvedMode(), all = allThemes();
+    if (!ctDraft) {
+      preview = null;
+      const list = settings.customThemes.map(t => `
+        <div class="ct-item ${settings.theme === t.id ? 'on' : ''}">
+          <span class="tp" style="${tileVars(t[mode])}"><span class="tp-card">${miniCells(8)}</span></span>
+          <div class="grow"><b>${esc(t.name)}</b><small>${settings.theme === t.id ? 'In use' : 'Custom theme'}</small></div>
+          ${settings.theme === t.id ? '' : `<button type="button" class="btn" data-ct="use" data-id="${t.id}">Use</button>`}
+          <button type="button" class="icon-btn" data-ct="edit" data-id="${t.id}" title="Edit" aria-label="Edit ${esc(t.name)}">${ICON.edit}</button>
+          <button type="button" class="icon-btn" data-ct="del" data-id="${t.id}" title="Delete" aria-label="Delete ${esc(t.name)}">${ICON.trash}</button>
+        </div>`).join('');
+      themesPane.innerHTML = `
+        <fieldset class="field">
+          <legend>Your themes</legend>
+          ${list ? `<div class="ct-list">${list}</div>` : '<div class="day-bar hint">No custom themes yet. Create one below — it starts as a copy of an existing theme.</div>'}
+        </fieldset>
+        <fieldset class="field">
+          <legend>Create a theme</legend>
+          <div class="row" style="align-items:flex-end;flex-wrap:wrap">
+            <label class="field grow" style="min-width:160px"><span class="label">Start from</span>
+              <select class="input" id="ctBase">${Object.entries(all).map(([id, th]) => `<option value="${id}" ${id === settings.theme ? 'selected' : ''}>${esc(th.name)}</option>`).join('')}</select>
+            </label>
+            <button type="button" class="btn primary" data-ct="new">${ICON.plus}New theme</button>
+          </div>
+          <p class="hint">Custom themes are saved in this browser and included in your backups.</p>
+        </fieldset>`;
+      return;
+    }
+    const pal = ctDraft[ctMode];
+    preview = { pal, mode: ctMode };
+    applyTheme();
+    themesPane.innerHTML = `
+      <label class="field"><span class="label">Theme name</span>
+        <input class="input" id="ctName" maxlength="30" value="${esc(ctDraft.name)}" autocomplete="off">
+      </label>
+      <fieldset class="field">
+        <legend>Palette</legend>
+        <div class="seg two" id="ctModeSeg">
+          <label><input type="radio" name="ctmode" value="dark" ${ctMode === 'dark' ? 'checked' : ''}><span>Dark version</span></label>
+          <label><input type="radio" name="ctmode" value="light" ${ctMode === 'light' ? 'checked' : ''}><span>Light version</span></label>
+        </div>
+        <p class="hint" style="margin-top:8px">Every theme has a dark and a light version. The whole page previews the one you’re editing.</p>
+      </fieldset>
+      <div class="ct-colors">
+        ${PAL_KEYS.map(([k, label, desc]) => `
+          <div class="ct-row">
+            <span class="ct-sw" style="--v:${pal[k]}"><input type="color" data-k="${k}" value="${pal[k]}" aria-label="${label}"></span>
+            <div class="grow"><b>${label}</b><small>${desc}</small></div>
+            <input class="input ct-hex" data-k="${k}" value="${pal[k]}" maxlength="7" spellcheck="false" autocomplete="off" aria-label="${label} hex">
+          </div>`).join('')}
+      </div>
+      <div class="dlg-foot">
+        ${ctDraft.id ? `<button type="button" class="btn danger" data-ct="del" data-id="${ctDraft.id}">Delete</button>` : ''}
+        <span class="spacer"></span>
+        <button type="button" class="btn" data-ct="cancel">Cancel</button>
+        <button type="button" class="btn primary" data-ct="save">Save theme</button>
+      </div>`;
+  }
+
+  function setDraftColor(k, v, fromHex) {
+    ctDraft[ctMode][k] = v;
+    const row = $(`.ct-row input[type="color"][data-k="${k}"]`, themesPane).closest('.ct-row');
+    $('.ct-sw', row).style.setProperty('--v', v);
+    const picker = $('input[type="color"]', row);
+    if (picker.value.toLowerCase() !== v) picker.value = v;
+    if (!fromHex) $('.ct-hex', row).value = v;
+    preview = { pal: ctDraft[ctMode], mode: ctMode };
+    applyTheme();
+  }
+  themesPane.addEventListener('input', e => {
+    const t = e.target;
+    if (!ctDraft) return;
+    if (t.id === 'ctName') { ctDraft.name = t.value; return; }
+    if (t.type === 'color' && t.dataset.k) { setDraftColor(t.dataset.k, t.value.toLowerCase()); return; }
+    if (t.classList.contains('ct-hex')) { const v = normHex(t.value); if (v) setDraftColor(t.dataset.k, v, true); }
+  });
+  themesPane.addEventListener('focusout', e => {
+    if (ctDraft && e.target.classList && e.target.classList.contains('ct-hex')) e.target.value = ctDraft[ctMode][e.target.dataset.k];
+  });
+  themesPane.addEventListener('change', e => {
+    if (e.target.name === 'ctmode' && ctDraft) { ctMode = e.target.value; renderThemesPane(); }
+  });
+  themesPane.addEventListener('click', e => {
+    const b = e.target.closest('[data-ct]');
+    if (!b) return;
+    const act = b.dataset.ct, id = b.dataset.id;
+    if (act === 'new') { startThemeDraft($('#ctBase').value); renderThemesPane(); setDlg.scrollTop = 0; }
+    else if (act === 'edit') { startThemeDraft(null, id); renderThemesPane(); setDlg.scrollTop = 0; }
+    else if (act === 'use') { settings.theme = id; saveSettings(); applyTheme(); renderThemesPane(); }
+    else if (act === 'cancel') stopThemeDraft();
+    else if (act === 'del') {
+      const t = settings.customThemes.find(x => x.id === id);
+      if (!t || !confirm(`Delete the theme “${t.name}”?`)) return;
+      settings.customThemes = settings.customThemes.filter(x => x.id !== id);
+      if (settings.theme === id) settings.theme = 'default';
+      saveSettings();
+      stopThemeDraft();
+      toast('Theme deleted');
+    } else if (act === 'save') {
+      const name = (ctDraft.name || '').trim() || 'My theme';
+      const data = { name: name.slice(0, 30), dark: normPal(ctDraft.dark, 'dark'), light: normPal(ctDraft.light, 'light') };
+      let id = ctDraft.id;
+      if (id) Object.assign(settings.customThemes.find(x => x.id === id), data);
+      else { id = 'c_' + Date.now().toString(36); settings.customThemes.push({ id, ...data }); }
+      settings.theme = id;
+      saveSettings();
+      stopThemeDraft();
+      toast('Theme saved and applied');
+    }
+  });
+
+  /* ---------- Backup: export / import ---------- */
   $('#exportBtn').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify({ app: 'habit-heatmaps', version: 1, exported: new Date().toISOString(), habits: state.habits, settings }, null, 2)], { type: 'application/json' });
+    const payload = { app: 'habit-heatmaps', version: 2, exported: new Date().toISOString(), habits: state.habits, settings };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `habits-${key(today())}.json`;
@@ -1812,28 +2099,42 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
+
+  const impDlg = $('#impDlg');
+  let pendingImport = null;
   $('#importBtn').addEventListener('click', () => $('#importFile').click());
   $('#importFile').addEventListener('change', async e => {
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
-    try {
-      const data = JSON.parse(await file.text());
-      const habits = Array.isArray(data) ? data : data && data.habits;
-      if (!Array.isArray(habits)) throw new Error('bad');
-      const msg = state.habits.length
-        ? `Replace your ${state.habits.length} current habit(s) with ${habits.length} from the backup?`
-        : `Import ${habits.length} habit(s)?`;
-      if (!confirm(msg)) return;
-      state = { habits: habits.map(normalize) };
-      save();
-      if (data && data.settings) { settings = normSettings(data.settings); saveSettings(); applyTheme(); }
-      setDlg.close();
-      render();
-      toast('Backup imported');
-    } catch (err) {
-      toast('That file isn’t a valid habits backup');
-    }
+    let data;
+    try { data = JSON.parse(await file.text()); } catch (err) { toast('That file isn’t a valid habits backup'); return; }
+    const habits = Array.isArray(data) ? data : data && data.habits;
+    if (!Array.isArray(habits)) { toast('That file isn’t a valid habits backup'); return; }
+    const hasSettings = !!(data && !Array.isArray(data) && data.settings && typeof data.settings === 'object');
+    pendingImport = { habits, settings: hasSettings ? data.settings : null };
+    const when = data && data.exported && !isNaN(new Date(data.exported)) ? ` from ${fmtLong(new Date(data.exported))}` : '';
+    const nThemes = hasSettings && Array.isArray(data.settings.customThemes) ? data.settings.customThemes.length : 0;
+    $('#impInfo').textContent = `Backup${when}: ${habits.length} habit${habits.length === 1 ? '' : 's'}` +
+      (hasSettings ? `, plus settings${nThemes ? ` and ${nThemes} custom theme${nThemes === 1 ? '' : 's'}` : ''}.` : '. It contains habit data only.');
+    $('#impSetRow').hidden = !hasSettings;
+    $('#impIgnore').checked = false;
+    $('#impWarn').textContent = state.habits.length ? `This replaces your ${state.habits.length} current habit${state.habits.length === 1 ? '' : 's'}.` : '';
+    impDlg.showModal();
+  });
+  $('#impGo').addEventListener('click', () => {
+    if (!pendingImport) return;
+    state = { habits: pendingImport.habits.map(normalize) };
+    save();
+    const withSettings = pendingImport.settings && !$('#impIgnore').checked;
+    if (withSettings) { settings = normSettings(pendingImport.settings); saveSettings(); }
+    pendingImport = null;
+    impDlg.close();
+    ctDraft = null; preview = null;
+    applyTheme();
+    render();
+    if (setDlg.open) showSTab(setTab);
+    toast(withSettings ? 'Habits and settings imported' : 'Habits imported');
   });
 
   /* ---------- Generic dialog closing ---------- */
@@ -1846,6 +2147,10 @@
   let toastTimer;
   function toast(msg) {
     const t = $('#toast');
+    // Open modal windows sit above everything else, so show the toast inside the active one.
+    const active = document.activeElement && document.activeElement.closest('dialog[open]');
+    const host = active || [...document.querySelectorAll('dialog[open]')].pop() || document.body;
+    if (t.parentElement !== host) host.appendChild(t);
     t.textContent = msg;
     t.classList.add('show');
     clearTimeout(toastTimer);

@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Habit Heatmaps</title>
+<meta name="description" content="Track your habits as heatmaps.">
+<meta name="theme-color" content="#0e1014" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Habits">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1014'/%3E%3Crect x='6' y='6' width='8' height='8' rx='2' fill='%237c5cff'/%3E%3Crect x='18' y='6' width='8' height='8' rx='2' fill='%2333384a'/%3E%3Crect x='6' y='18' width='8' height='8' rx='2' fill='%2333384a'/%3E%3Crect x='18' y='18' width='8' height='8' rx='2' fill='%237c5cff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0e1014;
+    --surface: #171a21;
+    --surface-2: #1f232c;
+    --border: #272c37;
+    --text: #eceef3;
+    --muted: #8a91a1;
+    --cell: #262b36;
+    --cell-off: #1c2028;
+    --skip: #9aa4b8;
+    --accent: #7c5cff;
+    --danger: #ff5d6c;
+    --shadow: 0 1px 2px rgba(0,0,0,.3);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --surface-2: #f0f1f4;
+      --border: #e4e6eb;
+      --text: #16181d;
+      --muted: #6a7180;
+      --cell: #e3e6ec;
+      --cell-off: #f2f3f6;
+      --skip: #8e98ab;
+      --shadow: 0 1px 3px rgba(16,24,40,.06);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  svg { width: 20px; height: 20px; display: block; }
+  [hidden] { display: none !important; }
+
+  .wrap { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  /* Header */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  h1 { font-size: 26px; margin: 0; letter-spacing: -.02em; }
+  .sub { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .top-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+  .btn {
+    border: 1px solid var(--border); background: var(--surface); border-radius: 12px;
+    padding: 9px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn svg { width: 18px; height: 18px; }
+  .btn.primary { background: var(--accent); border-color: transparent; color: #fff; }
+  .btn.danger { color: var(--danger); }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface); display: grid; place-items: center; padding: 0; color: var(--muted);
+  }
+
+  /* Legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 12px; margin: 0 2px 14px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  .swipe-hint { display: none !important; }
+  @media (max-width: 760px) { .swipe-hint { display: inline-flex !important; } }
+
+  /* Cards */
+  .list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    padding: 16px; box-shadow: var(--shadow); min-width: 0;
+  }
+  .card-head { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: start; }
+  .emoji {
+    width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+    font-size: 21px; font-weight: 700; color: color-mix(in srgb, var(--c) 80%, var(--text));
+    background: color-mix(in srgb, var(--c) 18%, transparent);
+  }
+  .titles h2 { font-size: 16px; margin: 0; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .desc {
+    margin: 2px 0 0; color: var(--muted); font-size: 13px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); white-space: nowrap; }
+
+  .actions { display: flex; align-items: center; gap: 6px; }
+  .act {
+    border: none; display: grid; place-items: center; padding: 0;
+    background: var(--surface-2); color: var(--muted); border-radius: 12px;
+    width: 36px; height: 36px; transition: transform .1s, background .15s, color .15s;
+  }
+  .act:active { transform: scale(.9); }
+  .act.check { width: 44px; height: 44px; border-radius: 14px; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
+  .act.check svg { width: 22px; height: 22px; }
+  .act.check.on { background: var(--c); color: var(--on, #fff); }
+  .act.check.not-due:not(.on) { opacity: .5; }
+  .act.skip svg { width: 18px; height: 18px; }
+  .act.skip.on { background: var(--skip); color: var(--bg); }
+  .act.more { background: none; width: 26px; }
+
+  /* Heatmap */
+  .hm-scroll {
+    margin-top: 14px; overflow-x: auto; overscroll-behavior-x: contain;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .hm-scroll::-webkit-scrollbar { display: none; }
+  .hm { width: max-content; }
+  .hm-months {
+    display: grid; grid-template-columns: repeat(var(--w), var(--cs)); column-gap: 3px;
+    height: 14px; font-size: 10px; line-height: 14px; color: var(--muted); margin-bottom: 4px; overflow: hidden;
+  }
+  .hm-months span { white-space: nowrap; }
+  .hm-grid {
+    display: grid; grid-template-rows: repeat(7, var(--cs)); grid-auto-columns: var(--cs);
+    grid-auto-flow: column; gap: 3px;
+  }
+  .c { border-radius: 3px; background: var(--cell); }
+  .c[data-d] { cursor: pointer; }
+  .c.off { background: var(--cell-off); }
+  .c.done { background: var(--c); }
+  .c.skip, .legend i.skip {
+    background: repeating-linear-gradient(135deg, var(--skip) 0 2px, transparent 2px 4px), var(--cell-off);
+  }
+  .c.pre { background: var(--cell-off); }
+  .c.fut { background: var(--cell); opacity: .3; }
+  .c.fut.nd { background: var(--cell-off); }
+  .c.today { box-shadow: inset 0 0 0 1.5px var(--text); }
+  .c.sel { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--c); }
+
+  /* Popover */
+  .pop {
+    position: fixed; z-index: 50; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    width: max-content; max-width: calc(100vw - 16px);
+  }
+  .pop-date { font-weight: 600; font-size: 14px; }
+  .pop-sub { font-size: 12px; color: var(--muted); margin-bottom: 8px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pop-btns { display: flex; gap: 6px; }
+  .pop-btns button {
+    border: 1px solid var(--border); background: var(--surface-2); border-radius: 10px;
+    padding: 7px 12px; font-size: 14px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center;
+  }
+  .pop-btns svg { width: 16px; height: 16px; }
+  .pop-btns button.on[data-s="done"] { background: var(--c); color: var(--on, #fff); border-color: transparent; }
+  .pop-btns button.on[data-s="skip"] { background: var(--skip); color: var(--bg); border-color: transparent; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 56px 16px; }
+  .empty h2 { margin: 18px 0 6px; font-size: 20px; }
+  .empty p { color: var(--muted); margin: 0 0 20px; }
+  .empty-grid { display: inline-grid; grid-template-columns: repeat(9, 14px); gap: 4px; }
+  .empty-grid i { width: 14px; height: 14px; border-radius: 3px; background: var(--cell); }
+  .empty-grid i.f { background: var(--accent); }
+
+  .foot { color: var(--muted); font-size: 12px; text-align: center; margin-top: 28px; }
+  .foot button { background: none; border: none; padding: 0; color: var(--accent); font-weight: 600; font-size: 12px; }
+
+  /* Dialogs */
+  dialog {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 20px; padding: 0; width: min(520px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px); box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.5); }
+  .dlg-body { display: flex; flex-direction: column; gap: 16px; padding: 18px; }
+  .dlg-head { display: flex; justify-content: space-between; align-items: center; }
+  .dlg-head h3 { margin: 0; font-size: 18px; }
+  .field { display: flex; flex-direction: column; gap: 6px; border: 0; margin: 0; padding: 0; min-width: 0; }
+  .label, .field legend {
+    font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .04em; padding: 0;
+  }
+  .field legend { margin-bottom: 8px; }
+  .input {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; outline: none; min-width: 0;
+  }
+  .input:focus { border-color: var(--accent); }
+  textarea.input { resize: vertical; min-height: 60px; }
+  .row { display: flex; gap: 10px; align-items: flex-end; }
+  .grow { flex: 1; min-width: 0; }
+  .emoji-in { width: 64px; text-align: center; font-size: 20px; padding: 7px; }
+
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  .swatches label { position: relative; cursor: pointer; }
+  .swatches input { position: absolute; opacity: 0; pointer-events: none; }
+  .swatches span {
+    display: block; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--sw); border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--border);
+  }
+  .swatches input:checked + span { box-shadow: 0 0 0 2px var(--sw); }
+  .swatches input:focus-visible + span { outline: 2px solid var(--text); outline-offset: 2px; }
+  .swatches { align-items: center; }
+  .custom-sw { position: relative; width: 30px; height: 30px; }
+  .custom-sw .sw-face {
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+    background: conic-gradient(#ef4444, #f59e0b, #84cc16, #10b981, #06b6d4, #3b82f6, #a855f7, #ec4899, #ef4444);
+    border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--border); color: #fff;
+  }
+  .custom-sw .sw-face svg { width: 13px; height: 13px; filter: drop-shadow(0 0 1.5px rgba(0,0,0,.7)); }
+  .custom-sw.has .sw-face { background: var(--sw); }
+  .custom-sw.sel .sw-face { box-shadow: 0 0 0 2px var(--sw, var(--text)); }
+  .custom-sw input {
+    position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+    border: 0; padding: 0; margin: 0; pointer-events: auto; -webkit-appearance: none; appearance: none;
+  }
+  .custom-sw:focus-within .sw-face { outline: 2px solid var(--text); outline-offset: 2px; }
+  .hex-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .hex-row .input { width: 116px; padding: 7px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; }
+
+  /* Emoji picker */
+  .icon-pick {
+    width: 64px; height: 44px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2);
+    font-size: 22px; display: grid; place-items: center; padding: 0; color: var(--muted); line-height: 1;
+  }
+  .icon-pick svg { width: 22px; height: 22px; }
+  .icon-pick.open { border-color: var(--accent); }
+  .emoji-panel {
+    border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2);
+    padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-top: -6px;
+  }
+  .emoji-panel .input { background: var(--surface); padding: 8px 10px; }
+  .emoji-panel .btn { padding: 7px 10px; font-size: 13px; }
+  .emoji-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 2px;
+    max-height: 216px; overflow-y: auto; overscroll-behavior: contain;
+  }
+  .emoji-grid h4 {
+    grid-column: 1 / -1; margin: 6px 2px 2px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--muted); font-weight: 600;
+  }
+  .emoji-grid button { border: 0; background: none; font-size: 22px; height: 38px; border-radius: 8px; padding: 0; line-height: 1; }
+  .emoji-grid button:hover, .emoji-grid button:focus-visible { background: var(--surface); outline: none; }
+  .emoji-grid .none-found { grid-column: 1 / -1; color: var(--muted); font-size: 13px; padding: 8px 2px; }
+
+  .wd-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .wd-presets button {
+    border: 1px solid var(--border); background: none; color: var(--muted); border-radius: 999px;
+    padding: 4px 10px; font-size: 12px; font-weight: 600;
+  }
+
+  .seg { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 3px; }
+  .seg label { position: relative; cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label { display: block; }
+  .seg span {
+    display: flex; align-items: center; justify-content: center; height: 100%; min-height: 36px;
+    text-align: center; padding: 6px 2px; border-radius: 9px; font-size: 14px; font-weight: 600;
+    color: var(--muted); line-height: 1.2;
+  }
+  .seg input:checked + span { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .seg input:focus-visible + span { outline: 2px solid var(--accent); }
+  .freq-opt { margin-top: 12px; }
+  .freq-opt .inline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .freq-opt .inline .input { width: 76px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .wd label { cursor: pointer; position: relative; }
+  .wd input { position: absolute; opacity: 0; pointer-events: none; }
+  .wd span {
+    display: block; padding: 7px 0; width: 48px; text-align: center; border-radius: 10px;
+    background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--muted);
+  }
+  .wd input:checked + span { background: var(--accent); color: #fff; border-color: transparent; }
+  .wd input:focus-visible + span { outline: 2px solid var(--text); }
+  .date-list { margin-top: 10px; }
+  .date-chip {
+    display: inline-flex; align-items: center; gap: 2px; padding: 4px 4px 4px 10px;
+    background: var(--surface-2); border-radius: 999px; font-size: 13px;
+  }
+  .date-chip button { border: 0; background: none; color: var(--muted); padding: 0 6px; font-size: 16px; line-height: 1; }
+  .hint { font-size: 12px; color: var(--muted); margin: 0; }
+  .dlg-foot { display: flex; gap: 8px; align-items: center; }
+  .spacer { flex: 1; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 16px); background: var(--text); color: var(--bg);
+    padding: 10px 16px; border-radius: 12px; font-size: 14px; opacity: 0;
+    transition: opacity .2s, transform .2s; pointer-events: none; z-index: 100; max-width: calc(100vw - 32px);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 22px; }
+    .wrap { padding-top: 18px; }
+    .card { padding: 14px; }
+    .btn-label { display: none; }
+    #addBtn { padding: 9px 11px; }
+    .wd span { width: 42px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Habits</h1>
+      <p class="sub" id="todayLabel"></p>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="dataBtn" title="Backup & restore" aria-label="Backup and restore"></button>
+      <button class="btn primary" id="addBtn" aria-label="New habit"></button>
+    </div>
+  </header>
+
+  <div class="legend" id="legend">
+    <span><i style="background:var(--accent)"></i>Done</span>
+    <span><i class="skip"></i>Skipped</span>
+    <span><i style="background:var(--cell)"></i>Missed / open</span>
+    <span><i style="background:var(--cell-off)"></i>Not scheduled</span>
+    <span class="swipe-hint">Swipe a heatmap sideways to see more days</span>
+  </div>
+
+  <main class="list" id="list"></main>
+
+  <section class="empty" id="empty" hidden>
+    <div class="empty-grid" aria-hidden="true" id="emptyGrid"></div>
+    <h2>No habits yet</h2>
+    <p>Create your first habit and start filling the grid.</p>
+    <button class="btn primary" id="emptyAdd">Create a habit</button>
+  </section>
+
+  <p class="foot">Saved in this browser on this device · <button id="footData">Back up or restore</button></p>
+</div>
+
+<!-- Day popover -->
+<div class="pop" id="pop" hidden role="dialog" aria-label="Edit day">
+  <div class="pop-date"></div>
+  <div class="pop-sub"></div>
+  <div class="pop-btns">
+    <button data-s="done"></button>
+    <button data-s="skip"></button>
+    <button data-s="">Clear</button>
+  </div>
+</div>
+
+<!-- Habit dialog -->
+<dialog id="dlg">
+  <form id="form" class="dlg-body" novalidate>
+    <div class="dlg-head">
+      <h3 id="dlgTitle">New habit</h3>
+      <button type="button" class="icon-btn" data-close aria-label="Close"></button>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <span class="label">Icon</span>
+        <button type="button" class="icon-pick" id="iconBtn" aria-label="Choose icon" aria-expanded="false"></button>
+      </div>
+      <label class="field grow">
+        <span class="label">Title</span>
+        <input class="input" id="fTitle" maxlength="60" placeholder="e.g. Morning run" autocomplete="off" required>
+      </label>
+    </div>
+
+    <div class="emoji-panel" id="emojiPanel" hidden>
+      <div class="row" style="align-items:center">
+        <input class="input grow" id="emojiSearch" placeholder="Search, or paste any emoji" autocomplete="off" aria-label="Search emoji">
+        <button type="button" class="btn" id="emojiNone">No icon</button>
+      </div>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+
+    <label class="field">
+      <span class="label">Description</span>
+      <textarea class="input" id="fDesc" rows="2" maxlength="200" placeholder="Optional"></textarea>
+    </label>
+
+    <fieldset class="field">
+      <legend>Color</legend>
+      <div class="swatches" id="swatches"></div>
+      <div class="hex-row">
+        <input class="input" id="fHex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Hex color" placeholder="#7c5cff">
+        <span class="hint">Pick a bubble, tap the pen for any color, or type a hex code.</span>
+      </div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend>How often?</legend>
+      <div class="seg">
+        <label><input type="radio" name="freq" value="daily" checked><span>Daily</span></label>
+        <label><input type="radio" name="freq" value="weekly"><span>Days of week</span></label>
+        <label><input type="radio" name="freq" value="monthly"><span>Monthly</span></label>
+        <label><input type="radio" name="freq" value="dates"><span>On dates</span></label>
+      </div>
+
+      <div class="freq-opt" data-for="daily">
+        <p class="hint">Every day counts.</p>
+      </div>
+      <div class="freq-opt" data-for="weekly" hidden>
+        <div class="chips wd" id="wdChips"></div>
+        <div class="wd-presets">
+          <button type="button" data-preset="0,1,2,3,4">Mon–Fri</button>
+          <button type="button" data-preset="5,6">Weekends</button>
+          <button type="button" data-preset="0,1,2,3,4,5,6">All</button>
+          <button type="button" data-preset="">Clear</button>
+        </div>
+        <p class="hint" style="margin-top:8px">Tap every day this habit is scheduled — pick as many as you like.</p>
+      </div>
+      <div class="freq-opt" data-for="monthly" hidden>
+        <div class="inline">On day <input class="input" id="fDom" type="number" min="1" max="31" inputmode="numeric"> of every month</div>
+        <p class="hint" style="margin-top:8px">In shorter months the last day of the month is used.</p>
+      </div>
+      <div class="freq-opt" data-for="dates" hidden>
+        <div class="row">
+          <input class="input grow" type="date" id="dateIn">
+          <button type="button" class="btn" id="addDate">Add</button>
+        </div>
+        <div class="chips date-list" id="dateList"></div>
+      </div>
+    </fieldset>
+
+    <label class="field">
+      <span class="label">Start tracking on</span>
+      <input class="input" type="date" id="fStart">
+      <span class="hint">This is the first square in the top-left of the heatmap. Pick an earlier date to fill in past days.</span>
+    </label>
+
+    <div class="dlg-foot">
+      <button type="button" class="btn danger" id="delBtn">Delete</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" class="btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Data dialog -->
+<dialog id="dataDlg">
+  <div class="dlg-body">
+    <div class="dlg-head">
+      <h3>Backup &amp; restore</h3>
+      <button type="button" class="icon-btn" data-close aria-label="Close"></button>
+    </div>
+    <p class="hint" style="font-size:14px">Your habits are stored in this browser on this device. Export a backup file to keep it safe or to move your habits to another phone or computer.</p>
+    <div class="row" style="flex-wrap:wrap">
+      <button class="btn" id="exportBtn">Export backup</button>
+      <button class="btn" id="importBtn">Import backup</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const STORE = 'habit-heatmaps.v1';
+  const COLORS = ['#7c5cff', '#3b82f6', '#06b6d4', '#10b981', '#84cc16', '#f59e0b', '#f97316', '#ef4444', '#ec4899', '#a855f7'];
+  const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const WEEKS = 53, GAP = 3, MIN_CELL = 11, MAX_CELL = 16;
+  const LOC = 'en-GB';
+
+  const ICON = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    skip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l9 7-9 7z"/><path d="M19 5v14"/></svg>',
+    more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
+    pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>',
+    smile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/></svg>'
+  };
+
+  // Curated emoji set: "emoji keywords" separated by "|".
+  const EMOJI = [
+    ['Fitness', '🏃 run running jog|🚶 walk steps|🏋️ gym weights lift workout|💪 strength muscle workout|🧘 yoga meditate stretch|🤸 stretch mobility|🚴 bike cycle cycling|🏊 swim swimming|🥾 hike hiking|🧗 climb bouldering|⚽ football soccer|🏀 basketball|🎾 tennis|🏓 table tennis ping pong|🥊 boxing|🛹 skate|⛷️ ski|🏄 surf|🤾 sport handball|🚣 row rowing'],
+    ['Health', '💧 water drink hydrate|💊 pill vitamin medicine supplement|🦷 teeth floss brush dentist|😴 sleep tired|🛌 bed rest sleep|🧴 skincare lotion sunscreen|🚿 shower cold|🛁 bath|🩺 doctor health checkup|❤️ heart cardio love|🫁 breathe breathing lungs|🚭 no smoking quit|🍎 apple fruit|🥗 salad healthy eat|🥦 vegetables broccoli greens|🍳 cook breakfast|☕ coffee|🍵 tea|🍷 alcohol wine drink|🍬 sugar candy sweets|🚫 no stop avoid quit|⚖️ weight scale'],
+    ['Mind', '🧠 brain think learn|🙏 gratitude pray thanks|📓 journal notebook diary|✍️ write writing|🌅 morning sunrise routine|🌙 night evening routine|😊 smile happy mood|🧩 puzzle|♟️ chess|📵 no phone screen time|🕯️ calm candle relax|🌬️ breathe breath air|🫶 kindness self care love|🤔 reflect think'],
+    ['Learning', '📚 read books reading|📖 book read|🎓 study school learn university|🗣️ language speak talk|🎹 piano music practice|🎸 guitar music|🥁 drums music|🎨 paint art draw|✏️ pencil draw sketch|📷 photo camera photography|💻 code computer laptop programming|🔬 science research|🧮 math|🌍 world language travel|🎧 podcast listen music audiobook|🎤 sing voice'],
+    ['Work & money', '💼 work job|📧 email inbox mail|✅ done task todo check|📅 calendar plan schedule|🎯 goal target focus|⏰ alarm wake up early time|⏱️ timer pomodoro focus|💰 money save savings|💸 spend budget expense|📈 invest growth stocks|🧾 bills receipt|🏦 bank finance|📞 call phone|📝 notes memo plan'],
+    ['Home', '🧹 clean sweep tidy|🧺 laundry wash|🍽️ dishes|🪴 plant water garden|🌱 grow sprout garden|🐕 dog walk pet|🐈 cat pet|🛒 groceries shopping|🗑️ trash garbage|🛏️ make bed|🧽 scrub clean|🔧 fix repair diy|👶 baby kid child'],
+    ['Social & fun', '👨‍👩‍👧 family|💬 message friend chat text|🤝 meet network friends|📱 phone call family|🎮 game play gaming|🎬 movie film|🌳 nature tree outside|☀️ sun outside daylight|🌊 sea ocean beach|🎉 party celebrate|🎁 gift|🚗 car drive|✈️ travel flight trip'],
+    ['Symbols', '⭐ star|🔥 fire streak|⚡ energy|💎 diamond|🏆 trophy win|🚀 rocket launch|🍀 luck clover|🌈 rainbow|💜 purple heart|💙 blue heart|💚 green heart|🧡 orange heart|🔔 bell reminder|📌 pin|🔑 key']
+  ].map(([cat, s]) => [cat, s.split('|').map(x => { const i = x.indexOf(' '); return [x.slice(0, i), x.slice(i + 1)]; })]);
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+  /* ---------- Dates (all local time, keys are YYYY-MM-DD) ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  const key = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parse = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  const today = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+  const isKey = k => typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k);
+  const fmtLong = d => d.toLocaleDateString(LOC, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  const fmtShort = d => d.toLocaleDateString(LOC, { day: 'numeric', month: 'short' });
+  const ord = n => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // Readable foreground (check mark etc.) on top of a habit color.
+  const onColor = hex => {
+    const n = parseInt(hex.slice(1), 16);
+    const lum = (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255;
+    return lum > 0.62 ? '#111318' : '#ffffff';
+  };
+  const uid = () =>(crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+  /* ---------- Storage ---------- */
+  function normalize(h) {
+    const f = (h && h.freq) || {};
+    const type = ['daily', 'weekly', 'monthly', 'dates'].includes(f.type) ? f.type : 'daily';
+    const freq = { type };
+    if (type === 'weekly') {
+      const days = Array.isArray(f.days) ? [...new Set(f.days.map(Number).filter(n => n >= 0 && n < 7))] : [];
+      freq.days = days.length ? days.sort() : [0];
+    }
+    if (type === 'monthly') freq.dom = Math.min(31, Math.max(1, Math.round(+f.dom) || 1));
+    if (type === 'dates') freq.dates = Array.isArray(f.dates) ? [...new Set(f.dates.filter(isKey))].sort() : [];
+    const log = {};
+    if (h && h.log && typeof h.log === 'object') {
+      for (const [k, v] of Object.entries(h.log)) if (isKey(k) && (v === 'done' || v === 'skip')) log[k] = v;
+    }
+    return {
+      id: String((h && h.id) || uid()),
+      title: String((h && h.title) || 'Untitled').slice(0, 60),
+      desc: String((h && h.desc) || '').slice(0, 200),
+      emoji: String((h && h.emoji) || '').slice(0, 16),
+      color: /^#[0-9a-f]{6}$/i.test(h && h.color) ? h.color : COLORS[0],
+      freq,
+      created: isKey(h && h.created) ? h.created : key(today()),
+      log
+    };
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && Array.isArray(d.habits)) return { habits: d.habits.map(normalize) };
+      }
+    } catch (e) { /* ignore */ }
+    return { habits: [] };
+  }
+
+  let storageWarned = false;
+  function save() {
+    try {
+      localStorage.setItem(STORE, JSON.stringify(state));
+    } catch (e) {
+      if (!storageWarned) { toast('Couldn’t save — this browser is blocking storage'); storageWarned = true; }
+    }
+  }
+
+  let state = load();
+  const byId = id => state.habits.find(h => h.id === id);
+
+  /* ---------- Habit logic ---------- */
+  function isDue(h, d) {
+    const f = h.freq;
+    switch (f.type) {
+      case 'daily': return true;
+      case 'weekly': return f.days.includes((d.getDay() + 6) % 7);
+      case 'monthly': {
+        const dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        return d.getDate() === Math.min(f.dom, dim);
+      }
+      case 'dates': return f.dates.includes(key(d));
+    }
+    return false;
+  }
+
+  function startOf(h) {
+    let s = h.created;
+    for (const k of Object.keys(h.log)) if (k < s) s = k;
+    if (h.freq.type === 'dates') for (const k of h.freq.dates) if (k < s) s = k;
+    return parse(s);
+  }
+
+  function stats(h) {
+    const t = today(), tk = key(t), start = startOf(h);
+    // Streak: consecutive scheduled days completed. Skips don't break it; today is allowed to be pending.
+    let streak = 0;
+    let d = t;
+    if (isDue(h, t) && !h.log[tk]) d = addDays(t, -1);
+    while (d >= start) {
+      if (isDue(h, d)) {
+        const s = h.log[key(d)];
+        if (s === 'done') streak++;
+        else if (s !== 'skip') break;
+      }
+      d = addDays(d, -1);
+    }
+    // Completion rate over scheduled days (skips excluded).
+    let due = 0, done = 0;
+    for (d = start; d <= t; d = addDays(d, 1)) {
+      if (!isDue(h, d)) continue;
+      const k = key(d), s = h.log[k];
+      if (s === 'skip') continue;
+      if (k === tk && !s) continue;
+      due++;
+      if (s === 'done') done++;
+    }
+    return { streak, pct: due ? Math.round(done / due * 100) : null };
+  }
+
+  function freqLabel(h) {
+    const f = h.freq;
+    if (f.type === 'daily') return 'Every day';
+    if (f.type === 'weekly') {
+      if (f.days.length === 7) return 'Every day';
+      if (f.days.length === 5 && !f.days.includes(5) && !f.days.includes(6)) return 'Weekdays';
+      if (f.days.length === 2 && f.days.includes(5) && f.days.includes(6)) return 'Weekends';
+      return f.days.map(i => WD[i]).join(', ');
+    }
+    if (f.type === 'monthly') return `Monthly on the ${ord(f.dom)}`;
+    const tk = key(today());
+    const next = f.dates.find(k => k >= tk);
+    const n = f.dates.length;
+    return `${n} date${n === 1 ? '' : 's'}` + (next ? ` · next ${next === tk ? 'today' : fmtShort(parse(next))}` : '');
+  }
+
+  /* ---------- Rendering ---------- */
+  function cardHTML(h) {
+    const t = today(), tk = key(t), st = h.log[tk], due = isDue(h, t), s = stats(h);
+    const icon = h.emoji ? esc(h.emoji) : esc(([...h.title.trim()][0] || '?').toUpperCase());
+    return `<article class="card" data-id="${esc(h.id)}" style="--c:${h.color};--on:${onColor(h.color)}">
+      <div class="card-head">
+        <div class="emoji" aria-hidden="true">${icon}</div>
+        <div class="titles">
+          <h2>${esc(h.title)}</h2>
+          ${h.desc ? `<p class="desc">${esc(h.desc)}</p>` : ''}
+          <div class="meta">
+            <span class="pill">${esc(freqLabel(h))}</span>
+            ${s.streak ? `<span class="pill" title="Current streak">🔥 ${s.streak}</span>` : ''}
+            ${s.pct !== null ? `<span class="pill" title="Completion rate on scheduled days (skips excluded)">${s.pct}%</span>` : ''}
+          </div>
+        </div>
+        <div class="actions">
+          <button class="act skip ${st === 'skip' ? 'on' : ''}" data-act="skip" aria-pressed="${st === 'skip'}" title="Skip today" aria-label="Skip today">${ICON.skip}</button>
+          <button class="act check ${st === 'done' ? 'on' : ''} ${due ? '' : 'not-due'}" data-act="check" aria-pressed="${st === 'done'}" title="${due ? 'Mark today done' : 'Not scheduled today — mark done anyway'}" aria-label="Mark today done">${ICON.check}</button>
+          <button class="act more" data-act="edit" title="Edit" aria-label="Edit habit">${ICON.more}</button>
+        </div>
+      </div>
+      <div class="hm-scroll"></div>
+    </article>`;
+  }
+
+  function drawHeatmap(card, h, scroll) {
+    const sc = $('.hm-scroll', card);
+    const w = sc.clientWidth || 600;
+    // Cell size is based on fitting one year (53 weeks) into the card width.
+    const cs = Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor((w - GAP * (WEEKS - 1)) / WEEKS * 10) / 10));
+    const t = today(), tk = key(t);
+    // The grid starts in the top-left corner on the habit's first day and fills forward in time
+    // (down each column, then to the next column — every column is 7 consecutive days).
+    const s0 = startOf(h), sk = key(s0);
+    const start = s0;
+    const todayCol = Math.floor(Math.round((t - start) / 864e5) / 7);
+    const cols = Math.max(WEEKS, todayCol + 1);
+    const labels = [];
+    let cells = '';
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < 7; r++) {
+        const d = addDays(start, c * 7 + r), k = key(d);
+        if ((c === 0 && r === 0) || (d.getDate() === 1 && c > 0)) {
+          const m = d.getMonth() === 0 && c > 0 ? `Jan ’${String(d.getFullYear()).slice(2)}` : d.toLocaleDateString(LOC, { month: 'short' });
+          labels.push({ c, m });
+        }
+        if (k > tk) { cells += `<span class="c fut${isDue(h, d) ? '' : ' nd'}"></span>`; continue; }
+        const s = h.log[k];
+        let cls = s === 'done' ? 'done' : s === 'skip' ? 'skip' : k < sk ? 'pre' : isDue(h, d) ? 'due' : 'off';
+        if (k === tk) cls += ' today';
+        cells += `<span class="c ${cls}" data-d="${k}"></span>`;
+      }
+    }
+    // Drop the first-column label if the next month label would collide with it.
+    if (labels.length > 1 && labels[1].c - labels[0].c < 3) labels.shift();
+    const months = labels.map(l => `<span style="grid-column:${l.c + 1}">${l.m}</span>`).join('');
+    sc.innerHTML = `<div class="hm" style="--cs:${cs}px;--w:${cols}"><div class="hm-months">${months}</div><div class="hm-grid">${cells}</div></div>`;
+    if (scroll != null) {
+      sc.scrollLeft = scroll;
+    } else {
+      // Show from the start; only scroll if today would be off-screen.
+      const colPx = cs + GAP;
+      sc.scrollLeft = Math.max(0, (todayCol + 3) * colPx - w);
+    }
+  }
+
+  let renderedDay = '';
+  function updateSummary() {
+    const t = today();
+    const dueToday = state.habits.filter(h => isDue(h, t));
+    const doneToday = dueToday.filter(h => h.log[key(t)] === 'done').length;
+    const date = t.toLocaleDateString(LOC, { weekday: 'long', day: 'numeric', month: 'long' });
+    let extra = '';
+    if (state.habits.length) {
+      extra = dueToday.length ? ` · ${doneToday}/${dueToday.length} done today` : ' · nothing scheduled today';
+    }
+    $('#todayLabel').textContent = date + extra;
+  }
+
+  function render() {
+    closePop();
+    renderedDay = key(today());
+    const list = $('#list');
+    const has = state.habits.length > 0;
+    $('#empty').hidden = has;
+    $('#legend').hidden = !has;
+    list.innerHTML = state.habits.map(cardHTML).join('');
+    $$('.card', list).forEach(el => drawHeatmap(el, byId(el.dataset.id)));
+    updateSummary();
+  }
+
+  function updateCard(id) {
+    const old = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+    const h = byId(id);
+    if (!old || !h) return render();
+    const sl = $('.hm-scroll', old).scrollLeft;
+    const tpl = document.createElement('template');
+    tpl.innerHTML = cardHTML(h).trim();
+    const el = tpl.content.firstElementChild;
+    old.replaceWith(el);
+    drawHeatmap(el, h, sl);
+    updateSummary();
+  }
+
+  function setDay(id, k, s) {
+    const h = byId(id);
+    if (!h) return;
+    if (s) h.log[k] = s; else delete h.log[k];
+    save();
+    updateCard(id);
+  }
+
+  /* ---------- Day popover ---------- */
+  const pop = $('#pop');
+  let popCtx = null;
+  $('[data-s="done"]', pop).innerHTML = ICON.check + 'Done';
+  $('[data-s="skip"]', pop).innerHTML = ICON.skip + 'Skip';
+
+  function openPop(cell) {
+    const card = cell.closest('.card');
+    const h = byId(card.dataset.id);
+    const k = cell.dataset.d;
+    if (popCtx && popCtx.id === h.id && popCtx.k === k) return closePop();
+    closePop();
+    popCtx = { id: h.id, k };
+    const d = parse(k), s = h.log[k];
+    $('.pop-date', pop).textContent = fmtLong(d);
+    $('.pop-sub', pop).textContent = h.title + (isDue(h, d) ? '' : ' · not scheduled');
+    $$('button[data-s]', pop).forEach(b => b.classList.toggle('on', !!b.dataset.s && b.dataset.s === s));
+    pop.style.setProperty('--c', h.color);
+    pop.style.setProperty('--on', onColor(h.color));
+    pop.hidden = false;
+    const r = cell.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
+    let x = r.left + r.width / 2 - pw / 2;
+    x = Math.max(8, Math.min(window.innerWidth - pw - 8, x));
+    let y = r.top - ph - 10;
+    if (y < 8) y = r.bottom + 10;
+    pop.style.left = x + 'px';
+    pop.style.top = y + 'px';
+    cell.classList.add('sel');
+  }
+
+  function closePop() {
+    if (pop.hidden) return;
+    pop.hidden = true;
+    popCtx = null;
+    $$('.c.sel').forEach(c => c.classList.remove('sel'));
+  }
+
+  pop.addEventListener('click', e => {
+    const b = e.target.closest('button[data-s]');
+    if (!b || !popCtx) return;
+    const { id, k } = popCtx;
+    closePop();
+    setDay(id, k, b.dataset.s || null);
+  });
+  document.addEventListener('pointerdown', e => {
+    if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('.c[data-d]')) closePop();
+  });
+  document.addEventListener('scroll', () => closePop(), true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
+
+  /* ---------- Card interactions ---------- */
+  $('#list').addEventListener('click', e => {
+    const cell = e.target.closest('.c[data-d]');
+    if (cell) { openPop(cell); return; }
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.closest('.card').dataset.id, h = byId(id), tk = key(today());
+    const act = btn.dataset.act;
+    if (act === 'edit') { openDialog(h); return; }
+    const target = act === 'check' ? 'done' : 'skip';
+    const next = h.log[tk] === target ? null : target;
+    setDay(id, tk, next);
+    if (next === 'done' && navigator.vibrate) navigator.vibrate(12);
+  });
+
+  /* ---------- Habit dialog ---------- */
+  const dlg = $('#dlg'), form = $('#form');
+  let editingId = null, formDates = [];
+
+  let formColor = COLORS[0], formEmoji = '';
+
+  /* Color: preset bubbles + custom "pen" bubble + hex field */
+  $('#swatches').innerHTML = COLORS.map((c, i) =>
+    `<label title="${c}"><input type="radio" name="color" value="${c}" ${i === 0 ? 'checked' : ''} aria-label="Color ${i + 1}"><span style="--sw:${c}"></span></label>`).join('') +
+    `<div class="custom-sw" id="customSw" title="Custom color"><span class="sw-face">${ICON.pen}</span><input type="color" id="customColor" value="#7c5cff" aria-label="Custom color"></div>`;
+  const customSw = $('#customSw'), customColor = $('#customColor'), hexIn = $('#fHex');
+
+  function normHex(v) {
+    v = String(v || '').trim().toLowerCase();
+    if (!v.startsWith('#')) v = '#' + v;
+    if (/^#[0-9a-f]{3}$/.test(v)) v = '#' + [...v.slice(1)].map(c => c + c).join('');
+    return /^#[0-9a-f]{6}$/.test(v) ? v : null;
+  }
+  function setFormColor(c, fromHex) {
+    formColor = c;
+    const preset = COLORS.includes(c);
+    $$('input[name="color"]', form).forEach(r => { r.checked = r.value === c; });
+    customSw.classList.toggle('sel', !preset);
+    if (!preset) {
+      customSw.classList.add('has');
+      customSw.style.setProperty('--sw', c);
+      if (customColor.value.toLowerCase() !== c) customColor.value = c;
+    }
+    if (!fromHex) hexIn.value = c;
+  }
+  function resetCustom() {
+    customSw.classList.remove('has', 'sel');
+    customSw.style.removeProperty('--sw');
+    customColor.value = '#7c5cff';
+  }
+  $$('input[name="color"]', form).forEach(r => r.addEventListener('change', () => setFormColor(r.value)));
+  customColor.addEventListener('input', () => setFormColor(customColor.value.toLowerCase()));
+  customColor.addEventListener('change', () => setFormColor(customColor.value.toLowerCase()));
+  customColor.addEventListener('click', () => { if (customSw.classList.contains('has')) setFormColor(customColor.value.toLowerCase()); });
+  hexIn.addEventListener('input', () => { const v = normHex(hexIn.value); if (v) setFormColor(v, true); });
+  hexIn.addEventListener('blur', () => { hexIn.value = formColor; });
+  hexIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); hexIn.blur(); } });
+
+  /* Emoji picker */
+  const iconBtn = $('#iconBtn'), emojiPanel = $('#emojiPanel'), emojiSearch = $('#emojiSearch'), emojiGrid = $('#emojiGrid');
+  function setEmoji(e) {
+    formEmoji = e;
+    iconBtn.innerHTML = e ? esc(e) : ICON.smile;
+  }
+  function renderEmojiGrid(q) {
+    q = (q || '').trim().toLowerCase();
+    const typed = q && /\p{Extended_Pictographic}/u.test(q) ? firstGrapheme(q) : '';
+    let html = typed ? `<h4>Use this</h4><button type="button" data-e="${esc(typed)}">${esc(typed)}</button>` : '';
+    for (const [cat, items] of EMOJI) {
+      const list = q && !typed ? items.filter(([, k]) => k.includes(q) || cat.toLowerCase().includes(q)) : items;
+      if (!list.length) continue;
+      html += `<h4>${esc(cat)}</h4>` + list.map(([e, k]) => `<button type="button" data-e="${e}" title="${esc(k.split(' ')[0])}">${e}</button>`).join('');
+    }
+    emojiGrid.innerHTML = html || '<div class="none-found">No match — you can also paste any emoji into the search box.</div>';
+  }
+  function toggleEmoji(open) {
+    emojiPanel.hidden = !open;
+    iconBtn.classList.toggle('open', open);
+    iconBtn.setAttribute('aria-expanded', String(open));
+    if (open) {
+      emojiSearch.value = '';
+      renderEmojiGrid('');
+      emojiGrid.scrollTop = 0;
+      if (window.matchMedia('(pointer: fine)').matches) emojiSearch.focus();
+    }
+  }
+  iconBtn.addEventListener('click', () => toggleEmoji(emojiPanel.hidden));
+  emojiSearch.addEventListener('input', () => renderEmojiGrid(emojiSearch.value));
+  emojiSearch.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const first = $('button[data-e]', emojiGrid);
+      if (first) { setEmoji(first.dataset.e); toggleEmoji(false); }
+    }
+  });
+  emojiGrid.addEventListener('click', e => {
+    const b = e.target.closest('button[data-e]');
+    if (!b) return;
+    setEmoji(b.dataset.e);
+    toggleEmoji(false);
+  });
+  $('#emojiNone').addEventListener('click', () => { setEmoji(''); toggleEmoji(false); });
+
+  /* Days of week */
+  $('#wdChips').innerHTML = WD.map((d, i) =>
+    `<label><input type="checkbox" name="wd" value="${i}"><span>${d}</span></label>`).join('');
+  $$('.wd-presets button', form).forEach(b => b.addEventListener('click', () => {
+    const days = b.dataset.preset ? b.dataset.preset.split(',').map(Number) : [];
+    $$('input[name="wd"]', form).forEach(c => { c.checked = days.includes(+c.value); });
+  }));
+
+  function showFreq(type) {
+    $$('.freq-opt', form).forEach(el => { el.hidden = el.dataset.for !== type; });
+  }
+  $$('input[name="freq"]', form).forEach(r => r.addEventListener('change', () => showFreq(r.value)));
+
+  function renderDates() {
+    formDates.sort();
+    $('#dateList').innerHTML = formDates.map(k =>
+      `<span class="date-chip">${esc(fmtLong(parse(k)))}<button type="button" data-rm="${k}" aria-label="Remove date">×</button></span>`).join('');
+  }
+  function addDateFromInput() {
+    const v = $('#dateIn').value;
+    if (!isKey(v)) return false;
+    if (!formDates.includes(v)) formDates.push(v);
+    $('#dateIn').value = '';
+    renderDates();
+    return true;
+  }
+  $('#addDate').addEventListener('click', () => { if (!addDateFromInput()) toast('Pick a date first'); });
+  $('#dateList').addEventListener('click', e => {
+    const b = e.target.closest('[data-rm]');
+    if (!b) return;
+    formDates = formDates.filter(k => k !== b.dataset.rm);
+    renderDates();
+  });
+
+  function openDialog(h) {
+    closePop();
+    editingId = h ? h.id : null;
+    form.reset();
+    const t = today();
+    $('#dlgTitle').textContent = h ? 'Edit habit' : 'New habit';
+    $('#delBtn').hidden = !h;
+    $('#fTitle').value = h ? h.title : '';
+    $('#fDesc').value = h ? h.desc : '';
+    $('#fStart').value = h ? h.created : key(t);
+    setEmoji(h ? h.emoji : '');
+    toggleEmoji(false);
+    resetCustom();
+    setFormColor(h ? h.color : COLORS[state.habits.length % COLORS.length]);
+
+    const f = h ? h.freq : { type: 'daily' };
+    $$('input[name="freq"]', form).forEach(r => { r.checked = r.value === f.type; });
+    const days = f.type === 'weekly' ? f.days : [(t.getDay() + 6) % 7];
+    $$('input[name="wd"]', form).forEach(c => { c.checked = days.includes(+c.value); });
+    $('#fDom').value = f.type === 'monthly' ? f.dom : t.getDate();
+    formDates = f.type === 'dates' ? [...f.dates] : [];
+    $('#dateIn').value = '';
+    renderDates();
+    showFreq(f.type);
+
+    dlg.showModal();
+    if (!h && window.matchMedia('(pointer: fine)').matches) $('#fTitle').focus();
+  }
+
+  function firstGrapheme(s) {
+    s = s.trim();
+    if (!s) return '';
+    if (window.Intl && Intl.Segmenter) {
+      const first = new Intl.Segmenter().segment(s)[Symbol.iterator]().next();
+      return first.value ? first.value.segment : '';
+    }
+    return [...s].slice(0, 2).join('');
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const title = $('#fTitle').value.trim();
+    if (!title) { toast('Give your habit a title'); $('#fTitle').focus(); return; }
+    const type = $('input[name="freq"]:checked', form).value;
+    const freq = { type };
+    if (type === 'weekly') {
+      freq.days = $$('input[name="wd"]:checked', form).map(c => +c.value).sort();
+      if (!freq.days.length) { toast('Pick at least one weekday'); return; }
+    }
+    if (type === 'monthly') {
+      const v = Math.round(+$('#fDom').value);
+      if (!(v >= 1 && v <= 31)) { toast('Day of month must be 1–31'); return; }
+      freq.dom = v;
+    }
+    if (type === 'dates') {
+      addDateFromInput();
+      if (!formDates.length) { toast('Add at least one date'); return; }
+      freq.dates = [...formDates].sort();
+    }
+    const startVal = $('#fStart').value;
+    const data = {
+      title,
+      desc: $('#fDesc').value.trim(),
+      emoji: formEmoji,
+      color: normHex(formColor) || COLORS[0],
+      freq,
+      created: isKey(startVal) ? startVal : key(today())
+    };
+    if (editingId) {
+      Object.assign(byId(editingId), data);
+    } else {
+      state.habits.push(normalize({ ...data, id: uid(), log: {} }));
+    }
+    save();
+    dlg.close();
+    render();
+  });
+
+  $('#delBtn').addEventListener('click', () => {
+    const h = byId(editingId);
+    if (!h) return;
+    if (!confirm(`Delete “${h.title}” and all of its history?`)) return;
+    state.habits = state.habits.filter(x => x.id !== editingId);
+    save();
+    dlg.close();
+    render();
+    toast('Habit deleted');
+  });
+
+  /* ---------- Data dialog ---------- */
+  const dataDlg = $('#dataDlg');
+  const openData = () => { closePop(); dataDlg.showModal(); };
+  $('#dataBtn').addEventListener('click', openData);
+  $('#footData').addEventListener('click', openData);
+
+  $('#exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify({ app: 'habit-heatmaps', version: 1, exported: new Date().toISOString(), habits: state.habits }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `habits-${key(today())}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+  $('#importBtn').addEventListener('click', () => $('#importFile').click());
+  $('#importFile').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const habits = Array.isArray(data) ? data : data && data.habits;
+      if (!Array.isArray(habits)) throw new Error('bad');
+      const msg = state.habits.length
+        ? `Replace your ${state.habits.length} current habit(s) with ${habits.length} from the backup?`
+        : `Import ${habits.length} habit(s)?`;
+      if (!confirm(msg)) return;
+      state = { habits: habits.map(normalize) };
+      save();
+      dataDlg.close();
+      render();
+      toast('Backup imported');
+    } catch (err) {
+      toast('That file isn’t a valid habits backup');
+    }
+  });
+
+  /* ---------- Generic dialog closing ---------- */
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-close]')) e.target.closest('dialog').close();
+  });
+  $$('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+
+  /* ---------- Toast ---------- */
+  let toastTimer;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  /* ---------- Static bits & lifecycle ---------- */
+  $('#addBtn').innerHTML = ICON.plus + '<span class="btn-label">New habit</span>';
+  $('#dataBtn').innerHTML = ICON.data;
+  $$('[data-close].icon-btn').forEach(b => { b.innerHTML = ICON.close; });
+  $('#addBtn').addEventListener('click', () => openDialog(null));
+  $('#emptyAdd').addEventListener('click', () => openDialog(null));
+  $('#emptyGrid').innerHTML = Array.from({ length: 27 }, (_, i) => `<i class="${[1, 3, 4, 8, 10, 13, 14, 15, 19, 22, 24, 25].includes(i) ? 'f' : ''}"></i>`).join('');
+
+  let lastW = window.innerWidth, rz = 0;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth === lastW) return;
+    lastW = window.innerWidth;
+    closePop();
+    cancelAnimationFrame(rz);
+    rz = requestAnimationFrame(() => $$('.card').forEach(el => drawHeatmap(el, byId(el.dataset.id))));
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && key(today()) !== renderedDay) render();
+  });
+  window.addEventListener('storage', e => {
+    if (e.key === STORE) { state = load(); render(); }
+  });
+
+  // Ask the browser not to evict our data (helps on mobile).
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+  render();
+})();
+</script>
+</body>
+</html>

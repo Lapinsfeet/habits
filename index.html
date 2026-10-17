@@ -140,6 +140,14 @@
   .c[data-d] { cursor: pointer; }
   .c.off { background: var(--cell-off); }
   .c.done { background: var(--c); }
+  .c.part { background: color-mix(in srgb, var(--c) 38%, var(--cell)); }
+  .c[data-n] { display: grid; place-items: center; overflow: hidden; }
+  .c[data-n]::after {
+    content: attr(data-n); font-size: calc(var(--cs) * .58); line-height: 1; font-weight: 700;
+    letter-spacing: -.04em; color: var(--text); font-variant-numeric: tabular-nums; pointer-events: none;
+  }
+  .c.done[data-n]::after { color: var(--on); }
+  .c.big[data-n]::after { font-size: calc(var(--cs) * .42); }
   .c.skip, .legend i.skip {
     background: repeating-linear-gradient(135deg, var(--skip) 0 2px, transparent 2px 4px), var(--cell-off);
   }
@@ -422,6 +430,55 @@
   select.input { appearance: auto; }
   .imp-warn { color: var(--danger); font-size: 13px; margin: 0; }
 
+  /* Counter habits */
+  .act.count {
+    width: 52px; height: 44px; border-radius: 14px; position: relative; font-weight: 800; font-size: 17px;
+    color: var(--text); font-variant-numeric: tabular-nums;
+    background: linear-gradient(var(--c), var(--c)) left bottom / var(--p, 0%) 4px no-repeat,
+                color-mix(in srgb, var(--c) 16%, transparent);
+  }
+  .act.count::after { content: '+'; position: absolute; top: 2px; right: 6px; font-size: 12px; font-weight: 800; opacity: .65; }
+  .act.count.met { background: var(--c); color: var(--on); }
+  .act.count.not-due:not(.met) { opacity: .6; }
+  .act.minus { width: 30px; font-size: 18px; font-weight: 700; }
+  .act.minus.zero { opacity: .4; }
+  .stepper { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 3px; }
+  .stepper button { border: 0; width: 34px; height: 32px; border-radius: 9px; background: var(--surface); font-size: 18px; font-weight: 700; color: var(--text); display: grid; place-items: center; padding: 0; }
+  .stepper button.plus { background: var(--c); color: var(--on); }
+  .stepper b { min-width: 44px; text-align: center; font-size: 16px; font-variant-numeric: tabular-nums; }
+  .stepper b small { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .pop-stack { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .cal .d { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  .cal .d .cnt { font-size: 10px; font-weight: 800; line-height: 1; padding: 2px 5px; border-radius: 999px; background: color-mix(in srgb, var(--c) 22%, transparent); }
+  .cal .d.done .cnt { background: color-mix(in srgb, var(--on) 22%, transparent); color: var(--on); }
+  .cal .d.part { background: color-mix(in srgb, var(--c) 30%, var(--surface-2)); }
+  .day-bar .stepper { background: var(--surface); }
+  .day-bar .stepper button:not(.plus) { background: var(--surface-2); }
+  .kind-opt .row { align-items: flex-end; }
+  .goal-in { width: 100px !important; }
+
+  @media (max-width: 480px) {
+    /* Let long names wrap to two lines instead of being cut off next to the buttons. */
+    .titles h2 span { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.25; }
+    .actions { gap: 4px; }
+    .act.skip { width: 32px; }
+    .act.minus { width: 28px; }
+    .act.count { width: 46px; }
+    .act.more { width: 20px; }
+  }
+
+  /* Danger zone */
+  .dz-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap;
+    border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--border)); border-radius: 14px; padding: 12px 14px;
+    background: color-mix(in srgb, var(--danger) 6%, var(--surface-2));
+  }
+  .dz-row > div { flex: 1; min-width: 200px; }
+  .dz-row b { display: block; font-size: 14px; }
+  .dz-row span.d { font-size: 12px; color: var(--muted); }
+  .btn.danger.solid { background: var(--danger); color: #fff; border-color: transparent; }
+  .btn:disabled { opacity: .45; cursor: default; }
+
   /* Empty */
   .empty { text-align: center; padding: 56px 16px; }
   .empty h2 { margin: 18px 0 6px; font-size: 20px; }
@@ -617,11 +674,7 @@
 <div class="pop" id="pop" hidden role="dialog" aria-label="Edit day">
   <div class="pop-date"></div>
   <div class="pop-sub"></div>
-  <div class="pop-btns">
-    <button data-s="done"></button>
-    <button data-s="skip"></button>
-    <button data-s="">Clear</button>
-  </div>
+  <div id="popBody"></div>
 </div>
 
 <!-- Habit dialog -->
@@ -662,6 +715,26 @@
       <div class="hex-row">
         <input class="input" id="fHex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Hex color" placeholder="#7c5cff">
         <span class="hint">Pick a bubble, tap the pen for any color, or type a hex code.</span>
+      </div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend>Type</legend>
+      <div class="seg two" id="kindSeg">
+        <label><input type="radio" name="kind" value="check" checked><span>Check off</span></label>
+        <label><input type="radio" name="kind" value="count"><span>Counter</span></label>
+      </div>
+      <div class="kind-opt" data-kind="check">
+        <p class="hint" style="margin-top:8px">Tap ✓ once when you’ve done it for the day.</p>
+      </div>
+      <div class="kind-opt" data-kind="count" hidden>
+        <div class="row" style="margin-top:10px">
+          <label class="field"><span class="label">Daily goal</span>
+            <input class="input goal-in" id="fGoal" type="number" min="1" max="9999" inputmode="numeric" value="1"></label>
+          <label class="field grow"><span class="label">Unit (optional)</span>
+            <input class="input" id="fUnit" maxlength="20" placeholder="e.g. glasses, pages, km" autocomplete="off"></label>
+        </div>
+        <p class="hint" style="margin-top:8px">Tap +1 every time you do it. A day counts as done once it reaches the goal — keep the goal at 1 if any count is fine.</p>
       </div>
     </fieldset>
 
@@ -780,6 +853,13 @@
       <input type="file" id="importFile" accept="application/json,.json" hidden>
     </div>
     <p class="hint">When importing you can choose to bring in only the habit data and keep your current settings.</p>
+    <fieldset class="field" style="margin-top:6px">
+      <legend>Danger zone</legend>
+      <div class="dz-row">
+        <div><b>Delete all habits</b><span class="d">Removes every habit and its history from this browser. Your settings and themes stay.</span></div>
+        <button type="button" class="btn danger" id="wipeBtn">Delete all…</button>
+      </div>
+    </fieldset>
   </div>
 
   <div class="det-pane" data-spane="keys" hidden>
@@ -792,6 +872,24 @@
       <div class="key-row"><span class="k"><kbd>Tab</kbd><kbd>Enter</kbd></span><div><b>Open a habit</b><small>Tab to a habit’s name, then Enter to open its details</small></div></div>
     </div>
     <p class="hint">Single-key shortcuts don’t trigger while you’re typing in a text field.</p>
+  </div>
+</dialog>
+
+<!-- Delete-all dialog -->
+<dialog id="wipeDlg" aria-label="Delete all habits">
+  <div class="dlg-body">
+    <div class="dlg-head">
+      <h3>Delete all habits?</h3>
+      <button type="button" class="icon-btn" data-close aria-label="Close"></button>
+    </div>
+    <p class="hint" style="font-size:14px" id="wipeInfo"></p>
+    <p class="imp-warn">This can’t be undone. Export a backup first if you might want them back.</p>
+    <div><button type="button" class="btn" id="wipeExport">Export backup first</button></div>
+    <div class="dlg-foot">
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="button" class="btn danger solid" id="wipeGo">Delete all</button>
+    </div>
   </div>
 </dialog>
 
@@ -996,11 +1094,22 @@
     }
     if (type === 'monthly') freq.dom = Math.min(31, Math.max(1, Math.round(+f.dom) || 1));
     if (type === 'dates') freq.dates = Array.isArray(f.dates) ? [...new Set(f.dates.filter(isKey))].sort() : [];
+    const kind = h && h.kind === 'count' ? 'count' : 'check';
+    const goal = Math.min(9999, Math.max(1, Math.round(+(h && h.goal)) || 1));
     const log = {};
     if (h && h.log && typeof h.log === 'object') {
-      for (const [k, v] of Object.entries(h.log)) if (isKey(k) && (v === 'done' || v === 'skip')) log[k] = v;
+      for (const [k, v] of Object.entries(h.log)) {
+        if (!isKey(k)) continue;
+        const n = typeof v === 'number' && isFinite(v) ? Math.min(9999, Math.max(0, Math.round(v))) : null;
+        if (v === 'skip') log[k] = 'skip';
+        else if (kind === 'count') { if (n) log[k] = n; else if (v === 'done') log[k] = goal; }
+        else if (v === 'done' || n) log[k] = 'done';
+      }
     }
     return {
+      kind,
+      goal,
+      unit: kind === 'count' ? String((h && h.unit) || '').trim().slice(0, 20) : '',
       id: String((h && h.id) || uid()),
       title: String((h && h.title) || 'Untitled').slice(0, 60),
       desc: String((h && h.desc) || '').slice(0, 200),
@@ -1057,6 +1166,19 @@
     return parse(s);
   }
 
+  // Day status helpers. Check habits store 'done'/'skip'; counter habits store a number or 'skip'.
+  const isCount = h => h.kind === 'count';
+  const countOf = (h, k) => typeof h.log[k] === 'number' ? h.log[k] : 0;
+  function stOf(h, k) {
+    const v = h.log[k];
+    if (v === 'skip') return 'skip';
+    if (isCount(h)) return typeof v === 'number' ? (v >= h.goal ? 'done' : v > 0 ? 'part' : null) : null;
+    return v === 'done' ? 'done' : null;
+  }
+  const fmtNum = n => n.toLocaleString(LOC);
+  const cellNum = n => n > 99 ? '99+' : String(n);
+  const unitLabel = (h, n) => h.unit ? ` ${h.unit}` : '';
+
   // Per-habit stats. Streak = consecutive scheduled days done; skips don't break it,
   // and today doesn't break it while it's still open.
   function stats(h) {
@@ -1064,14 +1186,17 @@
     let run = 0, best = 0, due = 0, done = 0, skipped = 0, missed = 0;
     for (let d = start; d <= t; d = addDays(d, 1)) {
       if (!isDue(h, d)) continue;
-      const k = key(d), s = h.log[k];
+      const k = key(d), s = stOf(h, k);
       if (s === 'skip') { skipped++; continue; }
       if (s === 'done') { done++; due++; run++; if (run > best) best = run; continue; }
       if (k === tk) continue;
       due++; missed++; run = 0;
     }
-    const doneAll = Object.values(h.log).filter(v => v === 'done').length;
-    return { streak: run, best, pct: due ? Math.round(done / due * 100) : null, done: doneAll, skipped, missed };
+    const keys = Object.keys(h.log);
+    const doneAll = keys.filter(k => stOf(h, k) === 'done').length;
+    const total = isCount(h) ? keys.reduce((a, k) => a + countOf(h, k), 0) : doneAll;
+    const logged = isCount(h) ? keys.filter(k => countOf(h, k) > 0).length : doneAll;
+    return { streak: run, best, pct: due ? Math.round(done / due * 100) : null, done: doneAll, total, logged, skipped, missed };
   }
 
   const diffDays = (a, b) => Math.round((b - a) / 864e5);
@@ -1090,7 +1215,7 @@
       let anyDone = false, open = false;
       for (const [h, s] of starts) {
         if (d < s || !isDue(h, d)) continue;
-        const st = h.log[k];
+        const st = stOf(h, k);
         if (st === 'skip') continue;
         if (st === 'done') anyDone = true; else open = true;
       }
@@ -1164,8 +1289,18 @@
 
   /* ---------- Rendering ---------- */
   function cardHTML(h) {
-    const t = today(), tk = key(t), st = h.log[tk], due = isDue(h, t), s = stats(h);
+    const t = today(), tk = key(t), st = stOf(h, tk), due = isDue(h, t), s = stats(h);
     const icon = h.emoji ? esc(h.emoji) : esc(([...h.title.trim()][0] || '?').toUpperCase());
+    let main;
+    if (isCount(h)) {
+      const n = countOf(h, tk), p = Math.min(100, Math.round(n / h.goal * 100));
+      const tip = `Today: ${n}${h.goal > 1 ? ` of ${h.goal}` : ''}${unitLabel(h)} — tap to add 1`;
+      main = `<button class="act minus ${n ? '' : 'zero'}" data-act="dec" title="Remove 1" aria-label="Remove 1 from today">−</button>
+          <button class="act count ${st === 'done' ? 'met' : ''} ${due ? '' : 'not-due'}" data-act="inc" style="--p:${p}%" title="${esc(tip)}" aria-label="${esc(tip)}">${n > 999 ? '999+' : n}</button>`;
+    } else {
+      main = `<button class="act check ${st === 'done' ? 'on' : ''} ${due ? '' : 'not-due'}" data-act="check" aria-pressed="${st === 'done'}" title="${due ? 'Mark today done' : 'Not scheduled today — mark done anyway'}" aria-label="Mark today done">${ICON.check}</button>`;
+    }
+    const goalPill = isCount(h) ? `<span class="pill" title="Counter habit">${h.goal > 1 ? `🎯 ${h.goal}${esc(unitLabel(h))}/day` : `# Counter${h.unit ? ' · ' + esc(h.unit) : ''}`}</span>` : '';
     return `<article class="card" data-id="${esc(h.id)}" style="--c:${h.color};--on:${onColor(h.color)}">
       <div class="card-head">
         <div class="emoji" data-act="detail" aria-hidden="true">${icon}</div>
@@ -1174,13 +1309,14 @@
           ${h.desc ? `<p class="desc">${esc(h.desc)}</p>` : ''}
           <div class="meta">
             <span class="pill">${esc(freqLabel(h))}</span>
+            ${goalPill}
             ${s.streak ? `<span class="pill" title="Current streak">🔥 ${s.streak}</span>` : ''}
             ${s.pct !== null ? `<span class="pill" title="Completion rate on scheduled days (skips excluded)">${s.pct}%</span>` : ''}
           </div>
         </div>
         <div class="actions">
           <button class="act skip ${st === 'skip' ? 'on' : ''}" data-act="skip" aria-pressed="${st === 'skip'}" title="Skip today" aria-label="Skip today">${ICON.skip}</button>
-          <button class="act check ${st === 'done' ? 'on' : ''} ${due ? '' : 'not-due'}" data-act="check" aria-pressed="${st === 'done'}" title="${due ? 'Mark today done' : 'Not scheduled today — mark done anyway'}" aria-label="Mark today done">${ICON.check}</button>
+          ${main}
           <button class="act more" data-act="edit" title="Edit" aria-label="Edit habit">${ICON.more}</button>
         </div>
       </div>
@@ -1212,23 +1348,21 @@
           labels.push({ c, m });
         }
         if (k > tk) { cells += `<span class="c fut${isDue(h, d) ? '' : ' nd'}"></span>`; continue; }
-        const s = h.log[k];
-        let cls = s === 'done' ? 'done' : s === 'skip' ? 'skip' : k < sk ? 'pre' : isDue(h, d) ? 'due' : 'off';
+        const s = stOf(h, k), n = countOf(h, k);
+        let cls = s || (k < sk ? 'pre' : isDue(h, d) ? 'due' : 'off');
         if (k === tk) cls += ' today';
-        cells += `<span class="c ${cls}" data-d="${k}"></span>`;
+        if (n > 99) cls += ' big';
+        cells += `<span class="c ${cls}" data-d="${k}"${n ? ` data-n="${cellNum(n)}"` : ''}></span>`;
       }
     }
     // Drop the first-column label if the next month label would collide with it.
     if (labels.length > 1 && labels[1].c - labels[0].c < 3) labels.shift();
     const months = labels.map(l => `<span style="grid-column:${l.c + 1}">${l.m}</span>`).join('');
     sc.innerHTML = `<div class="hm" style="--cs:${cs}px;--w:${cols}"><div class="hm-months">${months}</div><div class="hm-grid">${cells}</div></div>`;
-    if (scroll != null) {
-      sc.scrollLeft = scroll;
-    } else {
-      // Show from the start; only scroll if today would be off-screen.
-      const colPx = cs + GAP;
-      sc.scrollLeft = Math.max(0, (todayCol + 3) * colPx - w);
-    }
+    // Restore / set the scroll position. Mark it as programmatic so it doesn't close an open day popup.
+    const before = sc.scrollLeft;
+    sc.scrollLeft = scroll != null ? scroll : Math.max(0, (todayCol + 3) * (cs + GAP) - w);
+    if (sc.scrollLeft !== before) sc._prog = true;
   }
 
   // Compact view: one row of the most recent days, today on the right.
@@ -1237,10 +1371,11 @@
     const t = today(), tk = key(t), sk = key(startOf(h));
     let cells = '';
     for (let i = n - 1; i >= 0; i--) {
-      const d = addDays(t, -i), k = key(d), s = h.log[k];
-      let cls = s === 'done' ? 'done' : s === 'skip' ? 'skip' : k < sk ? 'pre' : isDue(h, d) ? 'due' : 'off';
+      const d = addDays(t, -i), k = key(d), s = stOf(h, k), n = countOf(h, k);
+      let cls = s || (k < sk ? 'pre' : isDue(h, d) ? 'due' : 'off');
       if (k === tk) cls += ' today';
-      cells += `<span class="c ${cls}" data-d="${k}" title="${esc(fmtLong(d))}"></span>`;
+      if (n > 99) cls += ' big';
+      cells += `<span class="c ${cls}" data-d="${k}"${n ? ` data-n="${cellNum(n)}"` : ''} title="${esc(fmtLong(d))}${n ? `: ${n}${esc(unitLabel(h))}` : ''}"></span>`;
     }
     sc.innerHTML = `<div class="strip" style="--cs:${cs}px">${cells}</div>`;
     sc.scrollLeft = 0;
@@ -1250,7 +1385,7 @@
   function updateSummary() {
     const t = today();
     const dueToday = state.habits.filter(h => isDue(h, t));
-    const doneToday = dueToday.filter(h => h.log[key(t)] === 'done').length;
+    const doneToday = dueToday.filter(h => stOf(h, key(t)) === 'done').length;
     const date = t.toLocaleDateString(LOC, { weekday: 'long', day: 'numeric', month: 'long' });
     let extra = '';
     if (state.habits.length) {
@@ -1293,13 +1428,49 @@
     save();
     updateCard(id);
     if (detDlg.open && detId === id) renderDetail();
+    if (popCtx && popCtx.id === id && popCtx.k === k) {
+      const c = document.querySelector(`.card[data-id="${CSS.escape(id)}"] .c[data-d="${k}"]`);
+      if (c) c.classList.add('sel');
+      renderPopBody();
+    }
   }
 
   /* ---------- Day popover ---------- */
   const pop = $('#pop');
-  let popCtx = null;
-  $('[data-s="done"]', pop).innerHTML = ICON.check + 'Done';
-  $('[data-s="skip"]', pop).innerHTML = ICON.skip + 'Skip';
+  let popCtx = null, popOpenedAt = 0;
+  const popBody = $('#popBody');
+
+  // Buttons for editing one day: Done/Skip/Clear, or a −/+ stepper for counter habits.
+  function dayControls(h, k) {
+    const st = stOf(h, k), v = h.log[k];
+    const skipBtn = `<button type="button" data-s="skip" class="${v === 'skip' ? 'on' : ''}">${ICON.skip}Skip</button>`;
+    const clearBtn = `<button type="button" data-s="">Clear</button>`;
+    if (!isCount(h)) {
+      return `<div class="pop-btns"><button type="button" data-s="done" class="${st === 'done' ? 'on' : ''}">${ICON.check}Done</button>${skipBtn}${clearBtn}</div>`;
+    }
+    const n = countOf(h, k);
+    return `<div class="pop-stack">
+      <div class="stepper">
+        <button type="button" data-step="-1" aria-label="Remove 1">−</button>
+        <b>${fmtNum(n)}${h.goal > 1 ? `<small> / ${h.goal}</small>` : ''}</b>
+        <button type="button" class="plus" data-step="1" aria-label="Add 1">+</button>
+      </div>
+      <div class="pop-btns">${skipBtn}${clearBtn}</div>
+    </div>`;
+  }
+  function stepDay(id, k, step) {
+    const h = byId(id);
+    if (!h) return;
+    const n = Math.max(0, Math.min(9999, countOf(h, k) + step));
+    setDay(id, k, n || null);
+    if (step > 0 && navigator.vibrate) navigator.vibrate(10);
+  }
+  function renderPopBody() {
+    if (!popCtx) return;
+    const h = byId(popCtx.id);
+    if (!h) return closePop();
+    popBody.innerHTML = dayControls(h, popCtx.k);
+  }
 
   function openPop(cell) {
     const card = cell.closest('.card');
@@ -1308,10 +1479,11 @@
     if (popCtx && popCtx.id === h.id && popCtx.k === k) return closePop();
     closePop();
     popCtx = { id: h.id, k };
-    const d = parse(k), s = h.log[k];
+    const d = parse(k);
     $('.pop-date', pop).textContent = fmtLong(d);
     $('.pop-sub', pop).textContent = h.title + (isDue(h, d) ? '' : ' · not scheduled');
-    $$('button[data-s]', pop).forEach(b => b.classList.toggle('on', !!b.dataset.s && b.dataset.s === s));
+    renderPopBody();
+    popOpenedAt = performance.now();
     pop.style.setProperty('--c', h.color);
     pop.style.setProperty('--on', onColor(h.color));
     pop.hidden = false;
@@ -1333,16 +1505,24 @@
   }
 
   pop.addEventListener('click', e => {
-    const b = e.target.closest('button[data-s]');
-    if (!b || !popCtx) return;
+    if (!popCtx) return;
     const { id, k } = popCtx;
+    const st = e.target.closest('button[data-step]');
+    if (st) { stepDay(id, k, +st.dataset.step); return; }
+    const b = e.target.closest('button[data-s]');
+    if (!b) return;
     closePop();
     setDay(id, k, b.dataset.s || null);
   });
   document.addEventListener('pointerdown', e => {
     if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('.c[data-d]')) closePop();
   });
-  document.addEventListener('scroll', () => closePop(), true);
+  document.addEventListener('scroll', e => {
+    if (e.target && e.target._prog) { e.target._prog = false; return; }
+    // Ignore the tiny scroll some browsers do right as you tap.
+    if (performance.now() - popOpenedAt < 250) return;
+    closePop();
+  }, true);
   /* ---------- Modals & keyboard shortcuts ---------- */
   function openModal(d) {
     if (!d.open) d.showModal();
@@ -1378,6 +1558,7 @@
     const act = btn.dataset.act;
     if (act === 'edit') { openDialog(h); return; }
     if (act === 'detail') { openDetail(h); return; }
+    if (act === 'inc' || act === 'dec') { stepDay(id, tk, act === 'inc' ? 1 : -1); return; }
     const target = act === 'check' ? 'done' : 'skip';
     const next = h.log[tk] === target ? null : target;
     setDay(id, tk, next);
@@ -1396,10 +1577,12 @@
   let detId = null, detMonth = null, detSel = null, detTab = 'stats';
 
   function dayStatus(h, d, tk, sk) {
-    const k = key(d), st = h.log[k], due = isDue(h, d);
+    const k = key(d), st = stOf(h, k), due = isDue(h, d), n = countOf(h, k);
+    const cnt = isCount(h) ? `${fmtNum(n)}${h.goal > 1 ? ` of ${h.goal}` : ''}${unitLabel(h)}` : '';
     if (k > tk) return { cls: 'fut' + (due ? ' due' : ''), label: due ? 'Scheduled' : 'Not scheduled' };
-    if (st === 'done') return { cls: 'done', label: 'Done' };
+    if (st === 'done') return { cls: 'done', label: isCount(h) ? `Done · ${cnt}` : 'Done' };
     if (st === 'skip') return { cls: 'skip', label: 'Skipped' };
+    if (st === 'part') return { cls: 'part', label: k === tk ? `${cnt} — keep going` : `${cnt} — below goal`, miss: k < tk && due };
     if (k < sk) return { cls: 'pre', label: 'Before start' };
     if (!due) return { cls: 'off', label: 'Not scheduled' };
     if (k === tk) return { cls: 'open', label: 'Open — not done yet' };
@@ -1462,9 +1645,14 @@
     const skipsAll = Object.values(h.log).filter(v => v === 'skip').length;
     const tile = (cls, ic, num, label, extra = '') =>
       `<div class="stat ${cls}"><span class="badge">${ic}</span><b>${num}</b><span class="lbl">${label}${extra}</span></div>`;
+    const cnt = isCount(h);
+    const first = cnt
+      ? tile('', ICON.hash, fmtNum(st.total), h.unit ? `Total ${esc(h.unit)}` : 'Total count',
+          `<small>${h.goal > 1 ? `${st.done} day${st.done === 1 ? '' : 's'} hit the goal` : `${st.logged} day${st.logged === 1 ? '' : 's'} logged`}</small>`)
+      : tile('', ICON.hash, st.done, 'Completions');
     detStats.innerHTML = `
       <div class="stats">
-        ${tile('', ICON.hash, st.done, 'Completions')}
+        ${first}
         ${tile('fail', ICON.close, st.missed, 'Fails')}
         ${tile('skipt', ICON.skip, skipsAll, 'Skips')}
         ${tile('streakt', ICON.flame, st.streak, 'Current streak', `<small>Best ${st.best}</small>`)}
@@ -1472,8 +1660,8 @@
       <div class="chart-card">
         <div class="chart-head">
           <div>
-            <h4>Completions / Month</h4>
-            <div class="chart-legend"><span><i class="ln"></i>Completions</span><span><i class="ln fail"></i>Fails</span></div>
+            <h4>${cnt ? 'Total / Month' : 'Completions / Month'}</h4>
+            <div class="chart-legend">${cnt ? `<span><i class="ln"></i>Total${h.unit ? ' ' + esc(h.unit) : ''}</span>` : '<span><i class="ln"></i>Completions</span><span><i class="ln fail"></i>Fails</span>'}</div>
           </div>
           <span class="badge">${ICON.chart}</span>
         </div>
@@ -1493,16 +1681,17 @@
     const out = [];
     for (let m = first; m <= cur; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
       const dim = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
-      let done = 0, fail = 0, skip = 0;
+      let done = 0, fail = 0, skip = 0, total = 0;
       for (let i = 1; i <= dim; i++) {
         const d = new Date(m.getFullYear(), m.getMonth(), i), k = key(d);
         if (k > tk) break;
-        const s = h.log[k];
+        const s = stOf(h, k);
+        total += countOf(h, k);
         if (s === 'done') done++;
         else if (s === 'skip') skip++;
         else if (k >= sk && k < tk && isDue(h, d)) fail++;
       }
-      out.push({ m, done, fail, skip });
+      out.push({ m, done, fail, skip, total, v: isCount(h) ? total : done });
     }
     return out;
   }
@@ -1532,14 +1721,16 @@
     const data = monthSeries(h), n = data.length;
     const W = Math.max(260, box.clientWidth || 480), H = 190;
     const pl = 28, pr = 14, pt = 14, pb = 26, iw = W - pl - pr, ih = H - pt - pb;
-    const top = Math.max(...data.map(d => Math.max(d.done, d.fail)));
-    const nice = top <= 4 ? 4 : top <= 10 ? 10 : Math.ceil(top / 10) * 10;
+    const cnt = isCount(h);
+    const top = Math.max(...data.map(d => Math.max(d.v, cnt ? 0 : d.fail)));
+    const mag = Math.pow(10, Math.max(1, String(Math.ceil(top)).length - 1));
+    const nice = top <= 4 ? 4 : top <= 10 ? 10 : top <= 100 ? Math.ceil(top / 10) * 10 : Math.ceil(top / mag) * mag;
     const xs = data.map((_, i) => pl + (n === 1 ? iw / 2 : i * iw / (n - 1)));
     const y = v => pt + ih - (v / nice) * ih;
-    const yd = data.map(d => y(d.done)), yf = data.map(d => y(d.fail));
+    const yd = data.map(d => y(d.v)), yf = data.map(d => y(d.fail));
     const line = smoothPath(xs, yd);
     const area = `${line} L${xs[n - 1].toFixed(1)},${pt + ih} L${xs[0].toFixed(1)},${pt + ih} Z`;
-    const hasFails = data.some(d => d.fail > 0);
+    const hasFails = !cnt && data.some(d => d.fail > 0);
     const gid = 'g' + h.id.replace(/[^a-z0-9]/gi, '');
     const grid = [0, nice / 2, nice].map(v =>
       `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" class="gl"/><text x="${pl - 8}" y="${y(v) + 3.5}" text-anchor="end">${Math.round(v)}</text>`).join('');
@@ -1563,7 +1754,7 @@
         ${hits}
       </svg>
       <div class="chart-tip" hidden></div>`;
-    box._chart = { data, xs, yd, W };
+    box._chart = { data, xs, yd, W, h };
   }
 
   function showChartTip(box, i) {
@@ -1572,7 +1763,10 @@
     const d = c.data[i], tip = $('.chart-tip', box), guide = $('.guide', box);
     guide.setAttribute('x1', c.xs[i]); guide.setAttribute('x2', c.xs[i]); guide.setAttribute('visibility', 'visible');
     $$('.pt', box).forEach((p, j) => p.classList.toggle('hl', j === i));
-    tip.innerHTML = `<b>${esc(d.m.toLocaleDateString(LOC, { month: 'long', year: 'numeric' }))}</b>${d.done} done · ${d.fail} fails · ${d.skip} skips`;
+    const hh = c.h, line = hh && isCount(hh)
+      ? `${fmtNum(d.total)}${esc(unitLabel(hh))} total · ${d.done} day${d.done === 1 ? '' : 's'} at goal · ${d.fail} fails`
+      : `${d.done} done · ${d.fail} fails · ${d.skip} skips`;
+    tip.innerHTML = `<b>${esc(d.m.toLocaleDateString(LOC, { month: 'long', year: 'numeric' }))}</b>${line}`;
     tip.hidden = false;
     const tw = tip.offsetWidth;
     tip.style.left = Math.max(0, Math.min(c.W - tw, c.xs[i] - tw / 2)) + 'px';
@@ -1603,9 +1797,10 @@
     let mDone = 0, mSkip = 0, mMiss = 0;
     for (let i = 1; i <= dim; i++) {
       const d = new Date(y, m, i), k = key(d), ds = dayStatus(h, d, tk, sk);
-      if (ds.cls === 'done') mDone++; else if (ds.cls === 'skip') mSkip++; else if (ds.cls === 'miss') mMiss++;
+      if (ds.cls === 'done') mDone++; else if (ds.cls === 'skip') mSkip++; else if (ds.cls === 'miss' || ds.miss) mMiss++;
       const cls = ds.cls + (k === tk ? ' today' : '') + (k === detSel ? ' sel' : '');
-      cells += `<button type="button" class="d ${cls}" data-d="${k}" ${k > tk ? 'disabled' : ''} aria-label="${esc(fmtLong(d))}: ${ds.label}">${i}</button>`;
+      const n = countOf(h, k);
+      cells += `<button type="button" class="d ${cls}" data-d="${k}" ${k > tk ? 'disabled' : ''} aria-label="${esc(fmtLong(d))}: ${esc(ds.label)}"><span>${i}</span>${n ? `<span class="cnt">${cellNum(n)}</span>` : ''}</button>`;
     }
     const minMonth = new Date(s0.getFullYear(), s0.getMonth(), 1);
     const maxMonth = new Date(t.getFullYear(), t.getMonth() + 6, 1);
@@ -1614,17 +1809,13 @@
 
     let dayBar;
     if (detSel && detSel <= tk) {
-      const sd = parse(detSel), ds = dayStatus(h, sd, tk, sk), cur = h.log[detSel];
+      const sd = parse(detSel), ds = dayStatus(h, sd, tk, sk);
       dayBar = `<div class="day-bar">
-        <div class="lbl">${esc(fmtLong(sd))}<small>${ds.label}</small></div>
-        <div class="pop-btns">
-          <button type="button" data-s="done" class="${cur === 'done' ? 'on' : ''}">${ICON.check}Done</button>
-          <button type="button" data-s="skip" class="${cur === 'skip' ? 'on' : ''}">${ICON.skip}Skip</button>
-          <button type="button" data-s="">Clear</button>
-        </div>
+        <div class="lbl">${esc(fmtLong(sd))}<small>${esc(ds.label)}</small></div>
+        ${dayControls(h, detSel)}
       </div>`;
     } else {
-      dayBar = '<div class="day-bar hint">Tap a day to mark it done, skipped or clear it.</div>';
+      dayBar = `<div class="day-bar hint">Tap a day to ${isCount(h) ? 'change its count, skip' : 'mark it done, skipped'} or clear it.</div>`;
     }
 
     detCal.innerHTML = `
@@ -1636,6 +1827,7 @@
       <div class="cal">${cells}</div>
       <div class="cal-legend">
         <span><i style="background:var(--c)"></i>Done</span>
+        ${isCount(h) && h.goal > 1 ? '<span><i style="background:color-mix(in srgb,var(--c) 30%,var(--surface-2))"></i>Below goal</span>' : ''}
         <span><i style="background:repeating-linear-gradient(135deg,var(--skip) 0 2px,transparent 2px 4px),var(--surface-2)"></i>Skipped</span>
         <span><i style="background:color-mix(in srgb,var(--danger) 30%,transparent)"></i>Missed</span>
         <span><i style="background:var(--surface-2)"></i>Open</span>
@@ -1662,6 +1854,8 @@
       renderDetail();
       return;
     }
+    const st = e.target.closest('button[data-step]');
+    if (st && detSel) { stepDay(detId, detSel, +st.dataset.step); return; }
     const s = e.target.closest('button[data-s]');
     if (s && detSel) setDay(detId, detSel, s.dataset.s || null);
   });
@@ -1812,6 +2006,12 @@
     resetCustom();
     setFormColor(h ? h.color : COLORS[state.habits.length % COLORS.length]);
 
+    const kind = h ? h.kind : 'check';
+    $$('input[name="kind"]', form).forEach(r => { r.checked = r.value === kind; });
+    $('#fGoal').value = h && h.kind === 'count' ? h.goal : 1;
+    $('#fUnit').value = h ? h.unit : '';
+    showKind(kind);
+
     const f = h ? h.freq : { type: 'daily' };
     $$('input[name="freq"]', form).forEach(r => { r.checked = r.value === f.type; });
     const days = f.type === 'weekly' ? f.days : [(t.getDay() + 6) % 7];
@@ -1824,6 +2024,10 @@
   }
 
   const formInDetail = () => detEdit.contains(form);
+  function showKind(kind) {
+    $$('.kind-opt', form).forEach(el => { el.hidden = el.dataset.kind !== kind; });
+  }
+  $$('input[name="kind"]', form).forEach(r => r.addEventListener('change', () => showKind(r.value)));
 
   function firstGrapheme(s) {
     s = s.trim();
@@ -1855,8 +2059,16 @@
       if (!formDates.length) { toast('Add at least one date'); return; }
       freq.dates = [...formDates].sort();
     }
+    const kind = $('input[name="kind"]:checked', form).value === 'count' ? 'count' : 'check';
+    let goal = 1;
+    if (kind === 'count') {
+      goal = Math.round(+$('#fGoal').value);
+      if (!(goal >= 1 && goal <= 9999)) { toast('Daily goal must be between 1 and 9999'); $('#fGoal').focus(); return; }
+    }
+    const unit = kind === 'count' ? $('#fUnit').value.trim().slice(0, 20) : '';
     const startVal = $('#fStart').value;
     const data = {
+      kind, goal, unit,
       title,
       desc: $('#fDesc').value.trim(),
       emoji: formEmoji,
@@ -1865,7 +2077,24 @@
       created: isKey(startVal) ? startVal : key(today())
     };
     if (editingId) {
-      Object.assign(byId(editingId), data);
+      const h = byId(editingId);
+      if (h.kind !== kind) {
+        // Convert the history when switching between Check off and Counter.
+        const log = {};
+        let dropped = 0;
+        for (const [k, v] of Object.entries(h.log)) {
+          if (v === 'skip') log[k] = 'skip';
+          else if (kind === 'count') log[k] = goal;                       // done → goal reached
+          else if (typeof v === 'number' && v >= h.goal) log[k] = 'done'; // goal reached → done
+          else dropped++;
+        }
+        const msg = kind === 'count'
+          ? 'Switch to a counter? Every day marked done will be set to the daily goal.'
+          : `Switch to check-off? Days that reached the goal become “done”${dropped ? ` and ${dropped} day${dropped === 1 ? '' : 's'} below the goal will be cleared` : ''}.`;
+        if (Object.keys(h.log).length && !confirm(msg)) return;
+        h.log = log;
+      }
+      Object.assign(h, data);
     } else {
       state.habits.push(normalize({ ...data, id: uid(), log: {} }));
     }
@@ -2166,6 +2395,24 @@
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+
+  /* Delete all habits */
+  const wipeDlg = $('#wipeDlg');
+  $('#wipeBtn').addEventListener('click', () => {
+    const n = state.habits.length;
+    if (!n) { toast('There are no habits to delete'); return; }
+    $('#wipeInfo').textContent = `This permanently deletes all ${n} habit${n === 1 ? '' : 's'} and their history from this browser. Your settings and custom themes are kept.`;
+    openModal(wipeDlg);
+    $('#wipeGo').focus();
+  });
+  $('#wipeExport').addEventListener('click', () => $('#exportBtn').click());
+  $('#wipeGo').addEventListener('click', () => {
+    state = { habits: [] };
+    save();
+    wipeDlg.close();
+    render();
+    toast('All habits deleted');
   });
 
   const impDlg = $('#impDlg');

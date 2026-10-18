@@ -467,6 +467,24 @@
     .act.more { width: 20px; }
   }
 
+  /* Sync */
+  .steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+  .steps li { padding-left: 2px; }
+  .steps a, .sync-state a, .foot a { color: var(--accent); font-weight: 600; }
+  .sync-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
+  .sync-state { display: flex; align-items: center; gap: 12px; }
+  .sync-state b { display: block; font-size: 14px; }
+  .sync-state small { color: var(--muted); font-size: 12px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
+  .dot.ok { background: #22c55e; box-shadow: 0 0 0 4px color-mix(in srgb, #22c55e 20%, transparent); }
+  .dot.busy { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+  .dot.warn { background: #f59e0b; }
+  .dot.err { background: var(--danger); }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .sync-err { color: var(--danger); font-size: 13px; margin: 0; }
+  #syncFoot { display: inline-flex; align-items: center; gap: 6px; }
+  #syncFoot .dot { width: 7px; height: 7px; box-shadow: none; }
+
   /* Danger zone */
   .dz-row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap;
@@ -667,7 +685,7 @@
     <button class="btn primary" id="emptyAdd">Create a habit</button>
   </section>
 
-  <p class="foot">Saved in this browser on this device · <button id="footData">Back up or restore</button></p>
+  <p class="foot"><span id="syncFoot">Saved in this browser on this device</span> · <button id="footData">Sync &amp; backup</button></p>
 </div>
 
 <!-- Day popover -->
@@ -846,13 +864,20 @@
   </div>
 
   <div class="det-pane" data-spane="data" hidden>
+    <fieldset class="field">
+      <legend>Sync between devices</legend>
+      <div id="syncBox"></div>
+    </fieldset>
+    <fieldset class="field">
+    <legend>Backup file</legend>
     <p class="hint" style="font-size:14px">Your habits, settings and custom themes are stored in this browser on this device. Export a backup file to keep them safe or move them to another phone or computer.</p>
     <div class="row" style="flex-wrap:wrap">
       <button class="btn" id="exportBtn">Export backup</button>
       <button class="btn" id="importBtn">Import backup…</button>
       <input type="file" id="importFile" accept="application/json,.json" hidden>
     </div>
-    <p class="hint">When importing you can choose to bring in only the habit data and keep your current settings.</p>
+    <p class="hint">When importing you can merge the file into your current habits or replace them, and choose whether to bring in its settings.</p>
+    </fieldset>
     <fieldset class="field" style="margin-top:6px">
       <legend>Danger zone</legend>
       <div class="dz-row">
@@ -901,6 +926,14 @@
       <button type="button" class="icon-btn" data-close aria-label="Close"></button>
     </div>
     <p class="hint" style="font-size:14px" id="impInfo"></p>
+    <fieldset class="field">
+      <legend>How to import</legend>
+      <div class="seg two" id="impModeSeg">
+        <label><input type="radio" name="impmode" value="merge" checked><span>Merge</span></label>
+        <label><input type="radio" name="impmode" value="replace"><span>Replace</span></label>
+      </div>
+      <p class="hint" id="impModeHint" style="margin-top:8px"></p>
+    </fieldset>
     <label class="switch-row" id="impSetRow">
       <div><b>Ignore settings</b><span class="d">Only import habit data. Your current theme, view, accent and custom themes stay as they are.</span></div>
       <span class="switch"><input type="checkbox" id="impIgnore"><i></i></span>
@@ -1035,6 +1068,7 @@
     pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>',
     chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
     chevL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+    sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.5 4.5L20 16"/><path d="M20 20v-4h-4"/></svg>',
     keyboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7.5 14h9"/></svg>',
     trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
     contrast: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>',
@@ -1117,8 +1151,68 @@
       color: /^#[0-9a-f]{6}$/i.test(h && h.color) ? h.color : COLORS[0],
       freq,
       created: isKey(h && h.created) ? h.created : key(today()),
-      log
+      log,
+      // Change timestamps used for syncing/merging: u = habit details, m = per-day log changes.
+      u: h && Number.isFinite(+h.u) && +h.u > 0 ? +h.u : 0,
+      m: normTimes(h && h.m)
     };
+  }
+  function normTimes(o) {
+    const out = {};
+    if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) if (isKey(k) && Number.isFinite(+v) && +v > 0) out[k] = +v;
+    return out;
+  }
+  function normDeleted(o) {
+    const out = {};
+    if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) if (Number.isFinite(+v) && +v > 0) out[String(k).slice(0, 80)] = +v;
+    return out;
+  }
+  const normState = d => ({ habits: (d && Array.isArray(d.habits) ? d.habits : []).map(normalize), deleted: normDeleted(d && d.deleted) });
+
+  // Stable JSON (sorted keys) to compare two states.
+  const canon = s => JSON.stringify(s, (k, v) => v && typeof v === 'object' && !Array.isArray(v)
+    ? Object.keys(v).sort().reduce((o, kk) => (o[kk] = v[kk], o), {}) : v);
+  const lastTouch = h => Math.max(h.u || 0, ...Object.values(h.m || {}), 0);
+  const metaOf = h => { const { log, m, ...rest } = h; return rest; };
+  // When both sides changed a day at the same moment (or neither has a timestamp), pick deterministically.
+  function pickDay(a, b) {
+    if (a === undefined) return b;
+    if (b === undefined) return a;
+    if (typeof a === 'number' && typeof b === 'number') return Math.max(a, b);
+    if (a === 'done' || b === 'done') return 'done';
+    if (typeof a === 'number') return a;
+    if (typeof b === 'number') return b;
+    return a;
+  }
+  function mergeHabit(a, b) {
+    const ua = a.u || 0, ub = b.u || 0;
+    const meta = ua > ub ? a : ub > ua ? b : (canon(metaOf(a)) >= canon(metaOf(b)) ? a : b);
+    const out = { ...meta, log: {}, m: {} };
+    const am = a.m || {}, bm = b.m || {};
+    const keys = new Set([...Object.keys(a.log), ...Object.keys(b.log), ...Object.keys(am), ...Object.keys(bm)]);
+    for (const k of keys) {
+      const ta = am[k] || 0, tb = bm[k] || 0;
+      const v = ta > tb ? a.log[k] : tb > ta ? b.log[k] : pickDay(a.log[k], b.log[k]);
+      if (v !== undefined) out.log[k] = v;
+      if (ta || tb) out.m[k] = Math.max(ta, tb);
+    }
+    return normalize(out);
+  }
+  // Merge two states: newer change wins per habit detail and per day; deletions win over older data.
+  function mergeStates(L, R, orderFrom = 'R') {
+    const deleted = { ...(L.deleted || {}) };
+    for (const [id, t] of Object.entries(R.deleted || {})) if (!(deleted[id] >= t)) deleted[id] = t;
+    const lm = new Map(L.habits.map(h => [h.id, h])), rm = new Map(R.habits.map(h => [h.id, h]));
+    const [first, second] = orderFrom === 'R' && R.habits.length ? [R, L] : [L, R];
+    const order = [...first.habits.map(h => h.id), ...second.habits.map(h => h.id).filter(id => !(first === R ? rm : lm).has(id))];
+    const habits = [];
+    for (const id of order) {
+      const a = lm.get(id), b = rm.get(id);
+      const h = a && b ? mergeHabit(a, b) : (a || b);
+      if (deleted[id] && deleted[id] >= lastTouch(h)) continue;
+      habits.push(h);
+    }
+    return { habits, deleted };
   }
 
   function load() {
@@ -1126,19 +1220,25 @@
       const raw = localStorage.getItem(STORE);
       if (raw) {
         const d = JSON.parse(raw);
-        if (d && Array.isArray(d.habits)) return { habits: d.habits.map(normalize) };
+        if (d && Array.isArray(d.habits)) return normState(d);
       }
     } catch (e) { /* ignore */ }
-    return { habits: [] };
+    return { habits: [], deleted: {} };
   }
 
   let storageWarned = false;
-  function save() {
+  // Write to this browser only.
+  function persist() {
     try {
       localStorage.setItem(STORE, JSON.stringify(state));
     } catch (e) {
       if (!storageWarned) { toast('Couldn’t save — this browser is blocking storage'); storageWarned = true; }
     }
+  }
+  // Save a change made on this device (and sync it if sync is on).
+  function save() {
+    persist();
+    if (typeof scheduleSync === 'function') scheduleSync();
   }
 
   let state = load();
@@ -1425,6 +1525,8 @@
     const h = byId(id);
     if (!h) return;
     if (s) h.log[k] = s; else delete h.log[k];
+    h.m = h.m || {};
+    h.m[k] = Date.now();
     save();
     updateCard(id);
     if (detDlg.open && detId === id) renderDetail();
@@ -2074,7 +2176,8 @@
       emoji: formEmoji,
       color: normHex(formColor) || COLORS[0],
       freq,
-      created: isKey(startVal) ? startVal : key(today())
+      created: isKey(startVal) ? startVal : key(today()),
+      u: Date.now()
     };
     if (editingId) {
       const h = byId(editingId);
@@ -2092,11 +2195,14 @@
           ? 'Switch to a counter? Every day marked done will be set to the daily goal.'
           : `Switch to check-off? Days that reached the goal become “done”${dropped ? ` and ${dropped} day${dropped === 1 ? '' : 's'} below the goal will be cleared` : ''}.`;
         if (Object.keys(h.log).length && !confirm(msg)) return;
+        const now = Date.now();
+        h.m = h.m || {};
+        for (const k of new Set([...Object.keys(h.log), ...Object.keys(log)])) h.m[k] = now;
         h.log = log;
       }
       Object.assign(h, data);
     } else {
-      state.habits.push(normalize({ ...data, id: uid(), log: {} }));
+      state.habits.push(normalize({ ...data, id: uid(), log: {}, m: {} }));
     }
     save();
     render();
@@ -2117,6 +2223,7 @@
     if (!h) return;
     if (!confirm(`Delete “${h.title}” and all of its history?`)) return;
     state.habits = state.habits.filter(x => x.id !== editingId);
+    state.deleted[editingId] = Date.now();
     save();
     if (formInDetail()) detDlg.close(); else dlg.close();
     render();
@@ -2131,7 +2238,7 @@
     cards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="13" y="13" width="8" height="7" rx="1.5"/></svg>',
     compact: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
   };
-  const SET_TABS = [['look', ICON.contrast, 'Appearance'], ['themes', ICON.palette, 'Themes'], ['layout', VIEW_ICON.cards, 'Layout'], ['data', ICON.data, 'Backup'], ['keys', ICON.keyboard, 'Shortcuts', 'desk-only']];
+  const SET_TABS = [['look', ICON.contrast, 'Appearance'], ['themes', ICON.palette, 'Themes'], ['layout', VIEW_ICON.cards, 'Layout'], ['data', ICON.sync, 'Sync'], ['keys', ICON.keyboard, 'Shortcuts', 'desk-only']];
 
   function openSettings(tab) {
     closePop();
@@ -2386,7 +2493,7 @@
 
   /* ---------- Backup: export / import ---------- */
   $('#exportBtn').addEventListener('click', () => {
-    const payload = { app: 'habit-heatmaps', version: 2, exported: new Date().toISOString(), habits: state.habits, settings };
+    const payload = { app: 'habit-heatmaps', version: 3, exported: new Date().toISOString(), habits: state.habits, deleted: state.deleted, settings };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -2402,13 +2509,15 @@
   $('#wipeBtn').addEventListener('click', () => {
     const n = state.habits.length;
     if (!n) { toast('There are no habits to delete'); return; }
-    $('#wipeInfo').textContent = `This permanently deletes all ${n} habit${n === 1 ? '' : 's'} and their history from this browser. Your settings and custom themes are kept.`;
+    $('#wipeInfo').textContent = `This permanently deletes all ${n} habit${n === 1 ? '' : 's'} and their history from this browser${sync ? ' — and, because sync is on, from your other devices too' : ''}. Your settings and custom themes are kept.`;
     openModal(wipeDlg);
     $('#wipeGo').focus();
   });
   $('#wipeExport').addEventListener('click', () => $('#exportBtn').click());
   $('#wipeGo').addEventListener('click', () => {
-    state = { habits: [] };
+    const now = Date.now();
+    for (const h of state.habits) state.deleted[h.id] = now;
+    state.habits = [];
     save();
     wipeDlg.close();
     render();
@@ -2427,19 +2536,48 @@
     const habits = Array.isArray(data) ? data : data && data.habits;
     if (!Array.isArray(habits)) { toast('That file isn’t a valid habits backup'); return; }
     const hasSettings = !!(data && !Array.isArray(data) && data.settings && typeof data.settings === 'object');
-    pendingImport = { habits, settings: hasSettings ? data.settings : null };
+    pendingImport = { habits, deleted: data && !Array.isArray(data) ? data.deleted : null, settings: hasSettings ? data.settings : null };
     const when = data && data.exported && !isNaN(new Date(data.exported)) ? ` from ${fmtLong(new Date(data.exported))}` : '';
     const nThemes = hasSettings && Array.isArray(data.settings.customThemes) ? data.settings.customThemes.length : 0;
     $('#impInfo').textContent = `Backup${when}: ${habits.length} habit${habits.length === 1 ? '' : 's'}` +
       (hasSettings ? `, plus settings${nThemes ? ` and ${nThemes} custom theme${nThemes === 1 ? '' : 's'}` : ''}.` : '. It contains habit data only.');
     $('#impSetRow').hidden = !hasSettings;
     $('#impIgnore').checked = false;
-    $('#impWarn').textContent = state.habits.length ? `This replaces your ${state.habits.length} current habit${state.habits.length === 1 ? '' : 's'}.` : '';
+    $$('input[name="impmode"]').forEach(r => { r.checked = r.value === 'merge'; });
+    syncImpMode();
     openModal(impDlg);
   });
+  function syncImpMode() {
+    const mode = $('input[name="impmode"]:checked').value, n = state.habits.length;
+    $('#impModeHint').textContent = mode === 'merge'
+      ? 'Adds the habits and days from the file to what you already have. Where both have the same day, the newer change wins.'
+      : 'Your current habits are replaced by the ones in the file.';
+    $('#impWarn').textContent = mode === 'replace' && n
+      ? `This replaces your ${n} current habit${n === 1 ? '' : 's'}${sync ? ' — on your other devices too, since sync is on' : ''}.` : '';
+  }
+  $$('input[name="impmode"]').forEach(r => r.addEventListener('change', syncImpMode));
   $('#impGo').addEventListener('click', () => {
     if (!pendingImport) return;
-    state = { habits: pendingImport.habits.map(normalize) };
+    const incoming = normState({ habits: pendingImport.habits, deleted: pendingImport.deleted });
+    if ($('input[name="impmode"]:checked').value === 'merge') {
+      // Importing is an explicit choice, so habits from the file come back even if they were deleted here.
+      const now = Date.now(), deleted = { ...state.deleted };
+      for (const h of incoming.habits) if (deleted[h.id]) { delete deleted[h.id]; h.u = now; }
+      for (const id of Object.keys(incoming.deleted)) if (incoming.habits.some(h => h.id === id)) delete incoming.deleted[id];
+      state = mergeStates({ ...state, deleted }, incoming, 'L');
+    } else {
+      // Replace: make the file's data win everywhere (also on synced devices).
+      const now = Date.now(), ids = new Set(incoming.habits.map(h => h.id));
+      const deleted = { ...state.deleted };
+      for (const h of state.habits) if (!ids.has(h.id)) deleted[h.id] = now;
+      for (const h of incoming.habits) {
+        const old = byId(h.id);
+        h.u = now;
+        for (const k of new Set([...Object.keys(h.log), ...Object.keys(h.m), ...(old ? Object.keys(old.log) : [])])) h.m[k] = now;
+        delete deleted[h.id];
+      }
+      state = { habits: incoming.habits, deleted };
+    }
     save();
     const withSettings = pendingImport.settings && !$('#impIgnore').checked;
     if (withSettings) { settings = normSettings(pendingImport.settings); saveSettings(); }
@@ -2451,6 +2589,212 @@
     if (setDlg.open) showSTab(setTab);
     toast(withSettings ? 'Habits and settings imported' : 'Habits imported');
   });
+
+  /* ---------- Sync via a secret GitHub Gist ---------- */
+  const SYNC_KEY = 'habit-heatmaps.sync';
+  const GIST_FILE = 'habit-heatmaps.json';
+  const TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=gist&description=Habit%20Heatmaps%20sync';
+  function loadSync() {
+    try { const s = JSON.parse(localStorage.getItem(SYNC_KEY) || 'null'); return s && typeof s.token === 'string' && s.token ? s : null; } catch (e) { return null; }
+  }
+  function saveSync() {
+    try { if (sync) localStorage.setItem(SYNC_KEY, JSON.stringify(sync)); else localStorage.removeItem(SYNC_KEY); } catch (e) { /* ignore */ }
+  }
+  let sync = loadSync();                 // { token, gistId, gistUrl, lastSync } — stored in this browser only, never exported
+  let syncState = sync ? 'idle' : 'off'; // off | idle | pending | syncing | ok | offline | error
+  let syncMsg = '', syncBusy = false, syncAgain = false, syncTimer = 0, syncRetried = false;
+
+  async function gh(path, opts = {}) {
+    const res = await fetch('https://api.github.com' + path, {
+      method: opts.method || 'GET',
+      body: opts.body,
+      cache: 'no-store',
+      headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + sync.token, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) }
+    });
+    if (!res.ok) { const err = new Error('GitHub ' + res.status); err.status = res.status; err.method = opts.method || 'GET'; throw err; }
+    return res.json();
+  }
+  const syncPayload = () => JSON.stringify({ app: 'habit-heatmaps', version: 3, updated: new Date().toISOString(), habits: state.habits, deleted: state.deleted });
+
+  async function findOrCreateGist() {
+    for (let page = 1; page <= 10; page++) {
+      const list = await gh(`/gists?per_page=100&page=${page}`);
+      const g = list.find(x => x.files && x.files[GIST_FILE]);
+      if (g) return g;
+      if (list.length < 100) break;
+    }
+    return gh('/gists', { method: 'POST', body: JSON.stringify({ description: 'Habit Heatmaps sync data', public: false, files: { [GIST_FILE]: { content: syncPayload() } } }) });
+  }
+  async function readGist() {
+    const g = await gh('/gists/' + encodeURIComponent(sync.gistId));
+    const f = g.files && g.files[GIST_FILE];
+    let data = null;
+    if (f) {
+      let text = f.content;
+      if (f.truncated && f.raw_url) text = await (await fetch(f.raw_url, { cache: 'no-store' })).text();
+      try { data = JSON.parse(text); } catch (e) { data = null; }
+    }
+    return { g, data };
+  }
+
+  function setSyncState(s, msg = '') {
+    syncState = s;
+    syncMsg = msg;
+    renderSyncUI();
+  }
+
+  async function syncNow() {
+    if (!sync) return;
+    clearTimeout(syncTimer);
+    syncTimer = 0;
+    if (syncBusy) { syncAgain = true; return; }
+    if (!navigator.onLine) { setSyncState('offline'); return; }
+    syncBusy = true;
+    setSyncState('syncing');
+    try {
+      if (!sync.gistId) {
+        const g = await findOrCreateGist();
+        sync.gistId = g.id;
+        sync.gistUrl = g.html_url;
+        saveSync();
+      }
+      const { g, data } = await readGist();
+      sync.gistUrl = g.html_url;
+      const remote = normState(data);
+      const merged = mergeStates(state, remote, 'R');
+      const mc = canon(merged);
+      if (mc !== canon(state)) { state = merged; persist(); refreshAfterSync(); }
+      if (!data || mc !== canon(remote)) {
+        await gh('/gists/' + encodeURIComponent(sync.gistId), { method: 'PATCH', body: JSON.stringify({ files: { [GIST_FILE]: { content: syncPayload() } } }) });
+      }
+      sync.lastSync = Date.now();
+      saveSync();
+      syncRetried = false;
+      setSyncState('ok');
+    } catch (err) {
+      if (!sync) return;
+      if (err.status === 404 && sync.gistId && !syncRetried) {
+        // The gist was deleted on GitHub — find another or create a new one with this device's data.
+        sync.gistId = null; saveSync(); syncRetried = true; syncAgain = true;
+      } else if (err.status === 401) {
+        setSyncState('error', 'GitHub rejected the token — it may have expired or been revoked. Disconnect and connect again with a new token.');
+      } else if ((err.status === 403 || err.status === 404) && err.method !== 'GET') {
+        setSyncState('error', 'This token isn’t allowed to save gists. Create a new token with the “gist” box ticked.');
+      } else if (err.status === 403 || err.status === 429) {
+        setSyncState('error', 'GitHub is limiting requests right now. Sync will try again shortly.');
+      } else if (!err.status) {
+        setSyncState(navigator.onLine ? 'error' : 'offline', navigator.onLine ? 'Couldn’t reach GitHub. Sync will try again shortly.' : '');
+      } else {
+        setSyncState('error', `GitHub returned an error (${err.status}). Sync will try again shortly.`);
+      }
+    } finally {
+      syncBusy = false;
+      if (syncAgain && sync) { syncAgain = false; setTimeout(syncNow, 300); }
+    }
+  }
+  function scheduleSync() {
+    if (!sync) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncNow, 1500);
+    if (!syncBusy) setSyncState('pending');
+  }
+  function refreshAfterSync() {
+    render();
+    if (detDlg.open) { if (!byId(detId)) detDlg.close(); else if (detTab !== 'edit') renderDetail(); }
+  }
+
+  function ago(ts) {
+    if (!ts) return 'never';
+    const s = (Date.now() - ts) / 1000;
+    if (s < 45) return 'just now';
+    if (s < 3600) return `${Math.round(s / 60)} min ago`;
+    if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+    return new Date(ts).toLocaleDateString(LOC, { day: 'numeric', month: 'short' });
+  }
+  function syncSummary() {
+    switch (syncState) {
+      case 'syncing': return ['busy', 'Syncing…'];
+      case 'pending': return ['busy', 'Saving changes…'];
+      case 'offline': return ['warn', 'Offline — will sync when you’re back online'];
+      case 'error': return ['err', 'Sync problem'];
+      default: return ['ok', sync && sync.lastSync ? `Synced ${ago(sync.lastSync)}` : 'Connected'];
+    }
+  }
+  function renderSyncUI() {
+    const foot = $('#syncFoot');
+    if (!sync) foot.textContent = 'Saved in this browser on this device';
+    else { const [cls, txt] = syncSummary(); foot.innerHTML = `<i class="dot ${cls}"></i>${esc(txt)}`; }
+    const box = $('#syncBox');
+    if (!box) return;
+    if (!sync) {
+      box.innerHTML = `
+        <p class="hint" style="font-size:14px;margin-bottom:12px">Keep your habits in sync between your laptop and phone through a secret gist on your GitHub account. Settings and themes stay separate per device.</p>
+        <ol class="steps">
+          <li><a href="${TOKEN_URL}" target="_blank" rel="noopener">Create a GitHub token</a> — the <b>gist</b> box is already ticked and is the only one needed. Choose an expiration, click <b>Generate token</b> and copy it.</li>
+          <li>Paste it below and press <b>Connect</b>.</li>
+          <li>Do the same on your other devices. They find the same gist automatically.</li>
+        </ol>
+        <div class="row" style="margin-top:12px">
+          <input class="input grow" id="tokenIn" type="password" placeholder="Paste token (ghp_…)" autocomplete="off" spellcheck="false" aria-label="GitHub token">
+          <button type="button" class="btn primary" id="syncConnect">Connect</button>
+        </div>
+        <p class="hint" style="margin-top:8px">The token is stored only in this browser and is never included in backup files.</p>`;
+      return;
+    }
+    const [cls, txt] = syncSummary();
+    box.innerHTML = `
+      <div class="sync-card">
+        <div class="sync-state"><i class="dot ${cls}"></i>
+          <div><b>${esc(txt)}</b><small>Syncing with GitHub${sync.gistUrl ? ` · <a href="${esc(sync.gistUrl)}" target="_blank" rel="noopener">view gist</a>` : ''}</small></div>
+        </div>
+        ${syncState === 'error' && syncMsg ? `<p class="sync-err">${esc(syncMsg)}</p>` : ''}
+        <div class="row" style="flex-wrap:wrap">
+          <button type="button" class="btn" id="syncNowBtn" ${syncBusy ? 'disabled' : ''}>Sync now</button>
+          <button type="button" class="btn" id="syncOff">Disconnect</button>
+        </div>
+      </div>
+      <p class="hint" style="margin-top:8px">Changes sync automatically when you open the page, when you come back to it, and a moment after every edit.</p>`;
+  }
+
+  async function connectSync(token) {
+    token = token.trim();
+    if (!token) { toast('Paste your GitHub token first'); return; }
+    sync = { token, gistId: null, gistUrl: null, lastSync: null };
+    const btn = $('#syncConnect');
+    if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+    try {
+      await gh('/gists?per_page=1');
+    } catch (err) {
+      sync = null;
+      renderSyncUI();
+      toast(err.status === 401 ? 'GitHub didn’t accept that token' : 'Couldn’t reach GitHub — check your connection');
+      return;
+    }
+    saveSync();
+    await syncNow();
+    if (sync && syncState === 'ok') toast(state.habits.length ? 'Sync is on' : 'Connected — no habits in the gist yet');
+  }
+  $('#syncBox').addEventListener('click', e => {
+    if (e.target.closest('#syncConnect')) connectSync($('#tokenIn').value);
+    else if (e.target.closest('#syncNowBtn')) syncNow();
+    else if (e.target.closest('#syncOff')) {
+      if (!confirm('Stop syncing on this device? Your habits stay here, and the gist stays on GitHub.')) return;
+      sync = null;
+      saveSync();
+      clearTimeout(syncTimer);
+      setSyncState('off');
+      toast('Sync turned off on this device');
+    }
+  });
+  $('#syncBox').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.id === 'tokenIn') { e.preventDefault(); connectSync(e.target.value); }
+  });
+  window.addEventListener('online', () => { if (sync) syncNow(); });
+  window.addEventListener('offline', () => { if (sync) setSyncState('offline'); });
+  setInterval(() => {
+    if (!sync) return;
+    if (!document.hidden && !syncBusy && !syncTimer) syncNow(); else renderSyncUI();
+  }, 60000);
 
   /* ---------- Generic dialog closing ---------- */
   document.addEventListener('click', e => {
@@ -2497,9 +2841,13 @@
   });
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && key(today()) !== renderedDay) render();
+    if (!sync) return;
+    if (document.hidden) { if (syncTimer) syncNow(); }  // push pending changes before the page goes to sleep
+    else syncNow();                                     // pull what other devices changed
   });
   window.addEventListener('storage', e => {
     if (e.key === STORE) { state = load(); render(); }
+    if (e.key === SYNC_KEY) { sync = loadSync(); setSyncState(sync ? 'idle' : 'off'); }
     if (e.key === SETTINGS_KEY) { settings = loadSettings(); applyTheme(); render(); }
   });
 
@@ -2508,6 +2856,8 @@
 
   applyTheme();
   render();
+  renderSyncUI();
+  if (sync) syncNow();
 })();
 </script>
 </body>

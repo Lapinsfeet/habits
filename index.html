@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Habits</title>
+<title>Habit Heatmaps</title>
 <meta name="description" content="Track your habits as heatmaps.">
 <meta name="theme-color" id="themeColor" content="#0e1014">
 <meta name="mobile-web-app-capable" content="yes">
@@ -304,7 +304,7 @@
   @media (max-width: 420px) { .cal { gap: 4px; } .stat b { font-size: 32px; } .stat { min-height: 112px; } }
 
   /* Toolbar: legend + quick view toggle */
-  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; margin: 0 2px 14px; }
+  .toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 10px 14px; flex-wrap: wrap; margin: 0 2px 14px; }
   .view-toggle { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 2px; gap: 2px; }
   .view-toggle button { border: 0; background: none; width: 34px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); padding: 0; }
   .view-toggle button svg { width: 17px; height: 17px; }
@@ -375,11 +375,29 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; font-weight: 600;
     color: var(--muted); background: var(--surface-2); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 6px;
   }
-  .kbd-hint { display: none; }
-  @media (hover: hover) and (pointer: fine) { .kbd-hint { display: flex; align-items: center; } }
   @media (hover: none), (pointer: coarse) { .desk-only { display: none !important; } }
-  .top-actions { align-items: stretch; }
-  .act-col { display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 6px; }
+  .top-actions { align-items: center; }
+  /* Shortcut key shown inside a button, drawn like a little keyboard key (desktop only). */
+  .kbd-in { display: none; }
+  @media (hover: hover) and (pointer: fine) {
+    .kbd-in {
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      min-width: 21px; height: 21px; padding: 0 5px; margin-left: 2px; border-radius: 5px;
+      font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0;
+      color: var(--muted);
+      background: linear-gradient(to bottom, var(--surface), var(--surface-2));
+      border: 1px solid var(--border); border-bottom-width: 3px;
+      box-shadow: 0 1px 1px rgba(0,0,0,.12), inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent);
+    }
+    .btn.primary .kbd-in {
+      color: var(--accent-on);
+      background: linear-gradient(to bottom, color-mix(in srgb, var(--accent-on) 26%, transparent), color-mix(in srgb, var(--accent-on) 12%, transparent));
+      border-color: color-mix(in srgb, var(--accent-on) 40%, transparent);
+      border-bottom-color: color-mix(in srgb, var(--accent-on) 55%, transparent);
+    }
+    .icon-btn.has-kbd { width: auto; padding: 0 7px 0 10px; display: inline-flex; align-items: center; gap: 7px; }
+    .btn .kbd-in { margin-left: 4px; }
+  }
   .dlg-head { gap: 10px; }
   .dlg-head h3 { flex: 1; }
   .esc-hint { flex-shrink: 0; }
@@ -664,28 +682,15 @@
       <p class="sub" id="todayLabel"></p>
     </div>
     <div class="top-actions">
-      <div class="act-col">
-        <button class="icon-btn" id="setBtn" title="Settings (S)" aria-label="Settings" aria-keyshortcuts="S"></button>
-        <span class="kbd-hint" aria-hidden="true"><kbd>S</kbd></span>
-      </div>
-      <div class="act-col">
-        <button class="btn primary" id="addBtn" title="New habit (N)" aria-label="New habit" aria-keyshortcuts="N"></button>
-        <span class="kbd-hint" aria-hidden="true"><kbd>N</kbd></span>
-      </div>
+      <button class="icon-btn has-kbd" id="setBtn" title="Settings (S)" aria-label="Settings" aria-keyshortcuts="S"></button>
+      <button class="btn primary" id="addBtn" title="New habit (N)" aria-label="New habit" aria-keyshortcuts="N"></button>
     </div>
   </header>
 
   <section class="streak" id="streak" hidden aria-live="polite"></section>
 
   <div class="toolbar" id="toolbar">
-  <div class="legend" id="legend">
-    <span><i style="background:var(--accent)"></i>Done</span>
-    <span><i class="skip"></i>Skipped</span>
-    <span><i style="background:var(--cell)"></i>Missed / open</span>
-    <span><i style="background:var(--cell-off)"></i>Not scheduled</span>
-    <span class="swipe-hint">Swipe a heatmap sideways to see more days · hold a habit’s name to move it</span>
-  </div>
-  <div class="view-toggle" id="viewToggle" role="group" aria-label="Habit view"></div>
+    <div class="view-toggle" id="viewToggle" role="group" aria-label="Habit view"></div>
   </div>
 
   <main class="list" id="list"></main>
@@ -1499,15 +1504,7 @@
 
   let renderedDay = '';
   function updateSummary() {
-    const t = today();
-    const dueToday = state.habits.filter(h => isDue(h, t));
-    const doneToday = dueToday.filter(h => stOf(h, key(t)) === 'done').length;
-    const date = t.toLocaleDateString(LOC, { weekday: 'long', day: 'numeric', month: 'long' });
-    let extra = '';
-    if (state.habits.length) {
-      extra = dueToday.length ? ` · ${doneToday}/${dueToday.length} done today` : ' · nothing scheduled today';
-    }
-    $('#todayLabel').textContent = date + extra;
+    $('#todayLabel').textContent = today().toLocaleDateString(LOC, { weekday: 'long', day: 'numeric', month: 'long' });
     renderStreak();
   }
 
@@ -1877,8 +1874,7 @@
           <h3>${esc(h.title)}</h3>
           <p class="det-desc">${h.desc ? esc(h.desc) + ' · ' : ''}${esc(freqLabel(h))}</p>
         </div>
-        <span class="kbd-hint esc-hint" aria-hidden="true"><kbd>Esc</kbd></span>
-        <button type="button" class="icon-btn" data-close aria-label="Close" title="Close (Esc)">${ICON.close}</button>
+        <button type="button" class="icon-btn has-kbd" data-close aria-label="Close" title="Close (Esc)">${ICON.close}<kbd class="kbd-in" aria-hidden="true">Esc</kbd></button>
       </div>
       <div class="tabs" role="tablist">
         ${tabs.map(([id, ic, label]) => `<button type="button" role="tab" data-tab="${id}" aria-selected="${detTab === id}" class="${detTab === id ? 'on' : ''}">${ic}${label}</button>`).join('')}
@@ -3026,12 +3022,12 @@
   }
 
   /* ---------- Static bits & lifecycle ---------- */
-  $('#addBtn').innerHTML = ICON.plus + '<span class="btn-label">New habit</span>';
-  $('#setBtn').innerHTML = ICON.sliders;
+  $('#addBtn').innerHTML = ICON.plus + '<span class="btn-label">New habit</span><kbd class="kbd-in" aria-hidden="true">N</kbd>';
+  $('#setBtn').innerHTML = ICON.sliders + '<kbd class="kbd-in" aria-hidden="true">S</kbd>';
   $$('[data-close].icon-btn').forEach(b => {
-    b.innerHTML = ICON.close;
+    b.innerHTML = ICON.close + '<kbd class="kbd-in" aria-hidden="true">Esc</kbd>';
+    b.classList.add('has-kbd');
     b.title = 'Close (Esc)';
-    b.insertAdjacentHTML('beforebegin', '<span class="kbd-hint esc-hint" aria-hidden="true"><kbd>Esc</kbd></span>');
   });
   $('#addBtn').addEventListener('click', () => openDialog(null));
   $('#emptyAdd').addEventListener('click', () => openDialog(null));

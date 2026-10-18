@@ -356,6 +356,13 @@
   #setDlg { width: min(640px, calc(100vw - 24px)); }
   /* Tabbed windows keep one fixed size, so switching tabs never moves the tab bar. */
   #setDlg, #detDlg { height: min(780px, calc(100vh - 24px)); height: min(780px, calc(100dvh - 24px)); }
+  /* Swipe between settings sections on touch screens: vertical scrolling stays native, horizontal drags are ours. */
+  #setDlg { overflow-x: hidden; }
+  #setDlg { touch-action: pan-y; }
+  #setDlg .det-pane { will-change: transform; }
+  .swipe-hint-set { display: none; text-align: center; font-size: 12px; color: var(--muted); margin: -4px 0 0; }
+  @media (hover: none), (pointer: coarse) { .swipe-hint-set { display: block; } }
+  .swipe-hint-set.gone { display: none !important; }
 
   /* Keyboard shortcut hints (desktop only) */
   kbd {
@@ -822,6 +829,7 @@
       <button type="button" class="icon-btn" data-close aria-label="Close"></button>
     </div>
     <div class="tabs four" id="setTabs" role="tablist"></div>
+    <p class="swipe-hint-set" id="setSwipeHint">Swipe left or right to switch sections</p>
   </div>
 
   <div class="det-pane" data-spane="look">
@@ -2258,6 +2266,66 @@
     setDlg.scrollTop = 0;
   }
   $('#setTabs').addEventListener('click', e => { const b = e.target.closest('[data-stab]'); if (b && b.dataset.stab !== setTab) showSTab(b.dataset.stab); });
+
+  /* Swipe left/right through the settings sections (touch screens). */
+  (() => {
+    try { if (localStorage.getItem('habit-heatmaps.swiped')) $('#setSwipeHint').classList.add('gone'); } catch (err) { /* ignore */ }
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let sx = 0, sy = 0, st = 0, dx = 0, mode = null, pane = null;
+    // Sections that are actually shown on this device (Shortcuts is desktop-only).
+    const visibleTabs = () => $$('#setTabs [data-stab]').filter(b => b.offsetParent !== null).map(b => b.dataset.stab);
+    const neighbour = dir => { const t = visibleTabs(), i = t.indexOf(setTab); return t[i + dir] || null; };
+    const skip = el => el.closest('input, textarea, select, .tabs, .ct-sw, .dlg-head');
+    setDlg.addEventListener('touchstart', e => {
+      if (e.touches.length !== 1 || skip(e.target)) { mode = 'none'; return; }
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = performance.now(); dx = 0; mode = null;
+      pane = $(`[data-spane="${setTab}"]`, setDlg);
+    }, { passive: true });
+    setDlg.addEventListener('touchmove', e => {
+      if (mode === 'none' || !pane) return;
+      const x = e.touches[0].clientX - sx, y = e.touches[0].clientY - sy;
+      if (mode === null) {
+        if (Math.abs(x) < 10 && Math.abs(y) < 10) return;
+        mode = Math.abs(x) > Math.abs(y) * 1.2 ? 'h' : 'none';   // mostly sideways → swipe; otherwise let it scroll
+        if (mode !== 'h') return;
+      }
+      dx = x;
+      // Rubber-band at the first/last section.
+      const edge = !neighbour(dx < 0 ? 1 : -1);
+      pane.style.transition = 'none';
+      pane.style.transform = `translateX(${edge ? dx * 0.25 : dx}px)`;
+      pane.style.opacity = String(1 - Math.min(0.5, Math.abs(dx) / 600));
+    }, { passive: true });
+    const end = () => {
+      if (mode !== 'h' || !pane) { mode = null; return; }
+      const dir = dx < 0 ? 1 : -1, next = neighbour(dir);
+      const fast = Math.abs(dx) / Math.max(1, performance.now() - st) > 0.45;
+      const old = pane;
+      mode = null; pane = null;
+      if (next && (Math.abs(dx) > 70 || (fast && Math.abs(dx) > 25))) {
+        old.style.transition = old.style.transform = old.style.opacity = '';
+        showSTab(next);
+        try { localStorage.setItem('habit-heatmaps.swiped', '1'); } catch (err) { /* ignore */ }
+        $('#setSwipeHint').classList.add('gone');
+        if (reduce.matches) return;
+        const fresh = $(`[data-spane="${next}"]`, setDlg);
+        fresh.style.transition = 'none';
+        fresh.style.transform = `translateX(${dir * 48}px)`;
+        fresh.style.opacity = '0.4';
+        fresh.getBoundingClientRect();
+        fresh.style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1), opacity .22s';
+        fresh.style.transform = '';
+        fresh.style.opacity = '';
+        if (navigator.vibrate) navigator.vibrate(6);
+      } else {
+        old.style.transition = 'transform .2s ease, opacity .2s';
+        old.style.transform = '';
+        old.style.opacity = '';
+      }
+    };
+    setDlg.addEventListener('touchend', end);
+    setDlg.addEventListener('touchcancel', end);
+  })();
   setDlg.addEventListener('close', () => { ctDraft = null; preview = null; applyTheme(); });
   $('#setBtn').addEventListener('click', () => openSettings('look'));
   $('#footData').addEventListener('click', () => openSettings('data'));

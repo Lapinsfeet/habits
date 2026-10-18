@@ -86,7 +86,12 @@
   @media (max-width: 760px) { .swipe-hint { display: inline-flex !important; } }
 
   /* Cards */
-  .list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; position: relative; }
+  /* Drag to reorder */
+  .card .emoji, .card .titles { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .card.dragging { position: relative; z-index: 30; box-shadow: 0 22px 50px rgba(0,0,0,.35), 0 0 0 2px var(--c); }
+  body.reordering, body.reordering * { cursor: grabbing !important; }
+  body.reordering .card:not(.dragging) { opacity: .85; }
   .card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
     padding: 16px; box-shadow: var(--shadow); min-width: 0;
@@ -678,7 +683,7 @@
     <span><i class="skip"></i>Skipped</span>
     <span><i style="background:var(--cell)"></i>Missed / open</span>
     <span><i style="background:var(--cell-off)"></i>Not scheduled</span>
-    <span class="swipe-hint">Swipe a heatmap sideways to see more days</span>
+    <span class="swipe-hint">Swipe a heatmap sideways to see more days · hold a habit’s name to move it</span>
   </div>
   <div class="view-toggle" id="viewToggle" role="group" aria-label="Habit view"></div>
   </div>
@@ -903,6 +908,7 @@
       <div class="key-row"><span class="k"><kbd>?</kbd></span><div><b>Shortcut list</b><small>Opens this page</small></div></div>
       <div class="key-row"><span class="k"><kbd>Enter</kbd></span><div><b>Save</b><small>Saves the habit form while you’re typing in it</small></div></div>
       <div class="key-row"><span class="k"><kbd>Tab</kbd><kbd>Enter</kbd></span><div><b>Open a habit</b><small>Tab to a habit’s name, then Enter to open its details</small></div></div>
+      <div class="key-row"><span class="k"><kbd>Alt</kbd><kbd>↑</kbd><kbd>↓</kbd></span><div><b>Move a habit</b><small>With a habit’s name focused, moves it up or down. You can also drag habits by their name or icon.</small></div></div>
     </div>
     <p class="hint">Single-key shortcuts don’t trigger while you’re typing in a text field.</p>
   </div>
@@ -1175,7 +1181,7 @@
     if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) if (Number.isFinite(+v) && +v > 0) out[String(k).slice(0, 80)] = +v;
     return out;
   }
-  const normState = d => ({ habits: (d && Array.isArray(d.habits) ? d.habits : []).map(normalize), deleted: normDeleted(d && d.deleted) });
+  const normState = d => ({ habits: (d && Array.isArray(d.habits) ? d.habits : []).map(normalize), deleted: normDeleted(d && d.deleted), ou: d && Number.isFinite(+d.ou) && +d.ou > 0 ? +d.ou : 0 });
 
   // Stable JSON (sorted keys) to compare two states.
   const canon = s => JSON.stringify(s, (k, v) => v && typeof v === 'object' && !Array.isArray(v)
@@ -1207,11 +1213,13 @@
     return normalize(out);
   }
   // Merge two states: newer change wins per habit detail and per day; deletions win over older data.
-  function mergeStates(L, R, orderFrom = 'R') {
+  function mergeStates(L, R, orderFrom = 'auto') {
     const deleted = { ...(L.deleted || {}) };
     for (const [id, t] of Object.entries(R.deleted || {})) if (!(deleted[id] >= t)) deleted[id] = t;
     const lm = new Map(L.habits.map(h => [h.id, h])), rm = new Map(R.habits.map(h => [h.id, h]));
-    const [first, second] = orderFrom === 'R' && R.habits.length ? [R, L] : [L, R];
+    // Habit order: 'auto' takes it from whichever side reordered most recently (ou = order changed at).
+    const useR = R.habits.length && (orderFrom === 'R' || (orderFrom === 'auto' && (R.ou || 0) >= (L.ou || 0)));
+    const [first, second] = useR ? [R, L] : [L, R];
     const order = [...first.habits.map(h => h.id), ...second.habits.map(h => h.id).filter(id => !(first === R ? rm : lm).has(id))];
     const habits = [];
     for (const id of order) {
@@ -1220,7 +1228,7 @@
       if (deleted[id] && deleted[id] >= lastTouch(h)) continue;
       habits.push(h);
     }
-    return { habits, deleted };
+    return { habits, deleted, ou: Math.max(L.ou || 0, R.ou || 0) };
   }
 
   function load() {
@@ -1231,7 +1239,7 @@
         if (d && Array.isArray(d.habits)) return normState(d);
       }
     } catch (e) { /* ignore */ }
-    return { habits: [], deleted: {} };
+    return { habits: [], deleted: {}, ou: 0 };
   }
 
   let storageWarned = false;
@@ -1412,7 +1420,7 @@
     return `<article class="card" data-id="${esc(h.id)}" style="--c:${h.color};--on:${onColor(h.color)}">
       <div class="card-head">
         <div class="emoji" data-act="detail" aria-hidden="true">${icon}</div>
-        <div class="titles" data-act="detail" role="button" tabindex="0" aria-label="Open details for ${esc(h.title)}">
+        <div class="titles" data-act="detail" role="button" tabindex="0" title="Open details · drag to reorder" aria-label="Open details for ${esc(h.title)}. Alt plus arrow keys to move.">
           <h2><span>${esc(h.title)}</span>${ICON.chev}</h2>
           ${h.desc ? `<p class="desc">${esc(h.desc)}</p>` : ''}
           <div class="meta">
@@ -1660,6 +1668,7 @@
 
   /* ---------- Card interactions ---------- */
   $('#list').addEventListener('click', e => {
+    if (suppressClick) { e.preventDefault(); e.stopPropagation(); return; }
     const cell = e.target.closest('.c[data-d]');
     if (cell) { openPop(cell); return; }
     const btn = e.target.closest('[data-act]');
@@ -1676,11 +1685,143 @@
   });
 
   $('#list').addEventListener('keydown', e => {
-    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.titles[data-act="detail"]')) {
+    if (!e.target.matches('.titles[data-act="detail"]')) return;
+    const id = e.target.closest('.card').dataset.id;
+    if ((e.key === 'Enter' || e.key === ' ') && !e.altKey) {
       e.preventDefault();
-      openDetail(byId(e.target.closest('.card').dataset.id));
+      openDetail(byId(id));
+    } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      const i = state.habits.findIndex(h => h.id === id), j = i + (e.key === 'ArrowUp' ? -1 : 1);
+      if (i < 0 || j < 0 || j >= state.habits.length) return;
+      const [h] = state.habits.splice(i, 1);
+      state.habits.splice(j, 0, h);
+      state.ou = Date.now();
+      save();
+      render();
+      const t = document.querySelector(`.card[data-id="${CSS.escape(id)}"] .titles`);
+      if (t) { t.focus(); t.closest('.card').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
     }
   });
+
+  /* ---------- Drag to reorder (mouse: drag a name/icon · touch: hold, then drag) ---------- */
+  const list = $('#list');
+  let drag = null, press = null, suppressClick = false;
+  const handleOf = t => t.closest && t.closest('.card .emoji, .card .titles');
+  const slot = c => ({ x: c.offsetLeft, y: c.offsetTop, w: c.offsetWidth, h: c.offsetHeight });
+
+  function beginDrag(p) {
+    closePop();
+    const card = p.card, s = slot(card), lr = list.getBoundingClientRect();
+    drag = { card, gx: p.x - (lr.left + s.x), gy: p.y - (lr.top + s.y), px: p.x, py: p.y, tx: 0, ty: 0, raf: 0 };
+    card.classList.add('dragging');
+    document.body.classList.add('reordering');
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    position();
+    drag.raf = requestAnimationFrame(autoScroll);
+    if (p.touch && navigator.vibrate) navigator.vibrate(15);
+  }
+  // Keep the grabbed point of the card under the pointer, then check whether it should swap places.
+  function position(noSwap) {
+    const { card } = drag, lr = list.getBoundingClientRect(), s = slot(card);
+    drag.tx = drag.px - drag.gx - (lr.left + s.x);
+    drag.ty = drag.py - drag.gy - (lr.top + s.y);
+    card.style.transform = `translate(${drag.tx}px, ${drag.ty}px) scale(1.02)`;
+    if (!noSwap) maybeSwap(s);
+  }
+  function maybeSwap(s) {
+    const { card } = drag, cards = $$('.card', list), i = cards.indexOf(card);
+    const lr = list.getBoundingClientRect();
+    const cx = drag.px - lr.left, cy = drag.py - lr.top;   // where your finger / pointer is, in list coordinates
+    for (let j = 0; j < cards.length; j++) {
+      if (j === i) continue;
+      const t = slot(cards[j]);
+      if (cx < t.x || cx > t.x + t.w || cy < t.y || cy > t.y + t.h) continue;
+      // Only swap once the pointer has passed the target's middle (prevents flicker with cards of different heights).
+      const sameRow = Math.abs(t.y - s.y) < 4, mx = t.x + t.w / 2, my = t.y + t.h / 2;
+      if (!(j > i ? (sameRow ? cx > mx : cy > my) : (sameRow ? cx < mx : cy < my))) return;
+      const before = new Map(cards.map(c => [c, slot(c)]));
+      list.insertBefore(card, j > i ? cards[j].nextSibling : cards[j]);
+      for (const c of cards) {           // slide the other cards into their new spots
+        if (c === card) continue;
+        const a = before.get(c), b = slot(c), dx = a.x - b.x, dy = a.y - b.y;
+        if (!dx && !dy) continue;
+        c.style.transition = 'none';
+        c.style.transform = `translate(${dx}px, ${dy}px)`;
+        c.getBoundingClientRect();
+        c.style.transition = 'transform .2s ease';
+        c.style.transform = '';
+      }
+      position(true);
+      if (navigator.vibrate && drag.touch) navigator.vibrate(5);
+      return;
+    }
+  }
+  function autoScroll() {
+    if (!drag) return;
+    const edge = 80, h = window.innerHeight;
+    const v = drag.py < edge ? -Math.ceil((edge - drag.py) / 5) : drag.py > h - edge ? Math.ceil((drag.py - (h - edge)) / 5) : 0;
+    if (v) { const y0 = window.scrollY; window.scrollBy(0, v); if (window.scrollY !== y0) position(); }
+    drag.raf = requestAnimationFrame(autoScroll);
+  }
+  function endDrag() {
+    const { card, raf } = drag;
+    cancelAnimationFrame(raf);
+    drag = null;
+    document.body.classList.remove('reordering');
+    card.style.transition = 'transform .2s ease';
+    card.style.transform = '';
+    setTimeout(() => { card.classList.remove('dragging'); card.style.transition = ''; }, 220);
+    suppressClick = true;
+    setTimeout(() => { suppressClick = false; }, 60);
+    const ids = $$('.card', list).map(c => c.dataset.id);
+    if (ids.join('|') !== state.habits.map(h => h.id).join('|')) {
+      const pos = new Map(ids.map((id, i) => [id, i]));
+      state.habits.sort((a, b) => pos.get(a.id) - pos.get(b.id));
+      state.ou = Date.now();
+      save();
+    }
+  }
+
+  // Mouse / pen: press on a name or icon and move a few pixels to start dragging.
+  list.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch' || e.button !== 0 || drag || !handleOf(e.target)) return;
+    press = { x: e.clientX, y: e.clientY, card: handleOf(e.target).closest('.card'), touch: false };
+  });
+  window.addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch') return;
+    if (drag) { drag.px = e.clientX; drag.py = e.clientY; position(); return; }
+    if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 6) {
+      const p = press; press = null;
+      beginDrag(p);
+      drag.px = e.clientX; drag.py = e.clientY; position();
+    }
+  });
+  window.addEventListener('pointerup', e => {
+    if (e.pointerType === 'touch') return;
+    press = null;
+    if (drag) endDrag();
+  });
+
+  // Touch: hold a name or icon still for a moment, then drag. Moving earlier just scrolls as usual.
+  list.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1 || drag || !handleOf(e.target)) return;
+    const t = e.touches[0];
+    press = { x: t.clientX, y: t.clientY, card: handleOf(e.target).closest('.card'), touch: true };
+    press.timer = setTimeout(() => { if (press && press.touch) { const p = press; press = null; beginDrag(p); drag.touch = true; } }, 380);
+  }, { passive: true });
+  list.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if (drag) { e.preventDefault(); drag.px = t.clientX; drag.py = t.clientY; position(); return; }
+    if (press && press.touch && Math.hypot(t.clientX - press.x, t.clientY - press.y) > 8) { clearTimeout(press.timer); press = null; }
+  }, { passive: false });
+  const touchDone = () => {
+    if (press && press.touch) { clearTimeout(press.timer); press = null; }
+    if (drag) endDrag();
+  };
+  list.addEventListener('touchend', touchDone);
+  list.addEventListener('touchcancel', touchDone);
+  list.addEventListener('contextmenu', e => { if (drag || (press && press.touch)) e.preventDefault(); });
 
   /* ---------- Detail view: Stats / Calendar / Edit ---------- */
   const detDlg = $('#detDlg'), detTop = $('#detTop'), detStats = $('#detStats'), detCal = $('#detCal'), detEdit = $('#detEdit');
@@ -2561,7 +2702,7 @@
 
   /* ---------- Backup: export / import ---------- */
   $('#exportBtn').addEventListener('click', () => {
-    const payload = { app: 'habit-heatmaps', version: 3, exported: new Date().toISOString(), habits: state.habits, deleted: state.deleted, settings };
+    const payload = { app: 'habit-heatmaps', version: 3, exported: new Date().toISOString(), habits: state.habits, deleted: state.deleted, ou: state.ou, settings };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -2644,7 +2785,7 @@
         for (const k of new Set([...Object.keys(h.log), ...Object.keys(h.m), ...(old ? Object.keys(old.log) : [])])) h.m[k] = now;
         delete deleted[h.id];
       }
-      state = { habits: incoming.habits, deleted };
+      state = { habits: incoming.habits, deleted, ou: now };
     }
     save();
     const withSettings = pendingImport.settings && !$('#impIgnore').checked;
@@ -2682,7 +2823,7 @@
     if (!res.ok) { const err = new Error('GitHub ' + res.status); err.status = res.status; err.method = opts.method || 'GET'; throw err; }
     return res.json();
   }
-  const syncPayload = () => JSON.stringify({ app: 'habit-heatmaps', version: 3, updated: new Date().toISOString(), habits: state.habits, deleted: state.deleted });
+  const syncPayload = () => JSON.stringify({ app: 'habit-heatmaps', version: 3, updated: new Date().toISOString(), habits: state.habits, deleted: state.deleted, ou: state.ou });
 
   async function findOrCreateGist() {
     for (let page = 1; page <= 10; page++) {
@@ -2729,7 +2870,7 @@
       const { g, data } = await readGist();
       sync.gistUrl = g.html_url;
       const remote = normState(data);
-      const merged = mergeStates(state, remote, 'R');
+      const merged = mergeStates(state, remote, 'auto');
       const mc = canon(merged);
       if (mc !== canon(state)) { state = merged; persist(); refreshAfterSync(); }
       if (!data || mc !== canon(remote)) {
